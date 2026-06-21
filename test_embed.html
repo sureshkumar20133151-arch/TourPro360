@@ -1,0 +1,55 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>TourPro360 Widget Test Page</title>
+  <style>
+    body {
+      background-color: #030712;
+      color: #f3f4f6;
+      font-family: sans-serif;
+      margin: 0;
+      padding: 40px;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+    }
+    h1 {
+      color: #ea580c;
+      margin-bottom: 8px;
+      font-size: 28px;
+    }
+    p {
+      color: #9ca3af;
+      margin-bottom: 30px;
+      font-size: 14px;
+    }
+    #tour-container {
+      width: 100%;
+      max-width: 1000px;
+      height: 600px;
+      border: 1px solid #1f2937;
+      border-radius: 16px;
+      overflow: hidden;
+      box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.4);
+    }
+  </style>
+</head>
+<body>
+
+  <h1>TourPro360 Live Embed Test</h1>
+  <p>This page demonstrates how to embed the TourPro360 widget. Replace <strong>data-token</strong> below with your actual project's token.</p>
+
+  <!-- Replace data-token with your real project embed_token from the admin panel -->
+  <div id="tour-container" data-token="YOUR_PROJECT_EMBED_TOKEN_HERE">
+    <div style="color:#4b5563;padding:20px;text-align:center;font-size:14px;margin-top:250px;">
+      Tour is loading...
+    </div>
+  </div>
+
+  <!-- Loads the compiled widget bundle -->
+  <script src="./tourpro-widget/dist/widget.js"></script>
+
+</body>
+</html>

@@ -1,0 +1,5 @@
+package com.solodeveloper.tourpro;
+
+import com.getcapacitor.BridgeActivity;
+
+public class MainActivity extends BridgeActivity {}

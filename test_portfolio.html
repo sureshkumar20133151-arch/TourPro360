@@ -1,0 +1,56 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>TourPro360 Portfolio Widget Test Page</title>
+  <style>
+    body {
+      background-color: #030712;
+      color: #f3f4f6;
+      font-family: system-ui, -apple-system, sans-serif;
+      margin: 0;
+      padding: 40px;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      min-height: 100vh;
+    }
+    .container {
+      width: 100%;
+      max-width: 1200px;
+    }
+    h1 {
+      color: #ea580c;
+      margin-bottom: 8px;
+      font-size: 28px;
+      text-align: center;
+    }
+    p {
+      color: #9ca3af;
+      margin-bottom: 40px;
+      font-size: 14px;
+      text-align: center;
+    }
+  </style>
+</head>
+<body>
+
+  <div class="container">
+    <h1>TourPro360 Client Portfolio Test</h1>
+    <p>This page demonstrates how to embed the TourPro360 client portfolio widget. Below is the auto-rendered gallery grid of the builder's projects.</p>
+
+    <!-- Client Portfolio Widget Embed Container -->
+    <!-- client token: 339d4c8c-c4fe-4a40-a6ca-458ad653585a -->
+    <div id="tourpro-portfolio" data-client-token="339d4c8c-c4fe-4a40-a6ca-458ad653585a">
+      <div style="color:#4b5563;padding:20px;text-align:center;font-size:14px;">
+        Portfolio widget is loading...
+      </div>
+    </div>
+  </div>
+
+  <!-- Loads the compiled widget bundle -->
+  <script src="./tourpro-widget/dist/widget.js"></script>
+
+</body>
+</html>

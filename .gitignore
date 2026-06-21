@@ -1,0 +1,30 @@
+# TourPro360 - Git Ignore Configuration
+
+# Dependency directories
+node_modules/
+**/node_modules/
+
+# Build outputs
+dist/
+**/dist/
+build/
+.next/
+out/
+*.tsbuildinfo
+
+# Environment variables & local configurations
+.env
+.env.local
+.env.development.local
+.env.test.local
+.env.production.local
+**/.env
+**/.env.*
+
+# Credentials & Database Passwords
+supabase_credentials.txt
+*credentials.txt
+
+# OS metadata
+.DS_Store
+Thumbs.db

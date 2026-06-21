@@ -1,0 +1,64 @@
+@import "tailwindcss";
+
+@theme {
+  --font-display: "Outfit", "Inter", sans-serif;
+  --font-ui: "Inter", sans-serif;
+}
+
+/* Custom Scrollbars */
+::-webkit-scrollbar {
+  width: 6px;
+  height: 6px;
+}
+::-webkit-scrollbar-track {
+  background: #030712;
+}
+::-webkit-scrollbar-thumb {
+  background: #1f2937;
+  border-radius: 3px;
+}
+::-webkit-scrollbar-thumb:hover {
+  background: #f97316;
+}
+
+/* Global Custom styles */
+body {
+  background-color: #030712;
+  color: #f3f4f6;
+  font-family: var(--font-ui);
+}
+
+/* Custom Hotspot Styling for Pannellum.js */
+.tour-hotspot {
+  width: 32px;
+  height: 32px;
+  background: rgba(249, 115, 22, 0.85);
+  border: 2.5px solid white;
+  border-radius: 50%;
+  cursor: pointer;
+  box-shadow: 0 0 8px rgba(0, 0, 0, 0.6);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: transform 0.25s cubic-bezier(0.4, 0, 0.2, 1), background-color 0.2s;
+}
+.tour-hotspot:hover {
+  transform: scale(1.2) rotate(15deg);
+  background: rgba(234, 88, 12, 0.95);
+}
+.tour-hotspot::after {
+  content: '➔';
+  color: white;
+  font-size: 13px;
+  font-weight: bold;
+}
+.pnlm-tooltip span {
+  background-color: rgba(0, 0, 0, 0.8) !important;
+  color: #fff !important;
+  border-radius: 8px !important;
+  border: 1px solid rgba(255, 255, 255, 0.1) !important;
+  padding: 6px 12px !important;
+  font-size: 12px !important;
+  font-family: var(--font-ui) !important;
+  box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06) !important;
+}
