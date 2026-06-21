@@ -14,7 +14,7 @@ export default function EmbedCode() {
       .then(({ data }) => setProject(data))
   }, [id])
 
-  const TOUR_DOMAIN = 'https://tour.solodeveloper.pro'
+  const TOUR_DOMAIN = 'https://tourpro360-widget.vercel.app'
 
   const iframeCode = project
     ? `<iframe\n  src="${TOUR_DOMAIN}/embed/${project.embed_token}"\n  width="100%"\n  height="600px"\n  frameborder="0"\n  allowfullscreen\n  style="border-radius:12px;"\n></iframe>`

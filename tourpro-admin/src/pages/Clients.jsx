@@ -91,7 +91,7 @@ export default function Clients() {
   }
 
   const copyWidgetCode = (token) => {
-    const code = `<div id="tourpro-portfolio"\n  data-client-token="${token}"\n  style="width:100%;min-height:600px;">\n</div>\n<script src="https://tour.solodeveloper.pro/widget.js"></script>`
+    const code = `<div id="tourpro-portfolio"\n  data-client-token="${token}"\n  style="width:100%;min-height:600px;">\n</div>\n<script src="https://tourpro360-widget.vercel.app/widget.js"></script>`
     navigator.clipboard.writeText(code)
     setCopied(true)
     setTimeout(() => setCopied(false), 2000)
@@ -350,7 +350,7 @@ export default function Clients() {
   data-client-token="${showEmbedModal.embed_token}"
   style="width:100%;min-height:600px;">
 </div>
-<script src="https://tour.solodeveloper.pro/widget.js"></script>`}
+<script src="https://tourpro360-widget.vercel.app/widget.js"></script>`}
                 </pre>
               </div>
 
