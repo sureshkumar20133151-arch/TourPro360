@@ -28,7 +28,7 @@ ROOMS = [
     {"file": "12_First_Floor_Master_Bathroom.jpg", "name": "First Floor - Master Bathroom"},
     {"file": "13_First_Floor_Open_Terrace_Balcony.jpg", "name": "First Floor - Open Terrace Balcony"},
     {"file": "14_Third_Floor_Observatory_Deck.jpg", "name": "Third Floor - Observatory Deck"},
-    {"file": "15_Third_Floor_Server_Room.jpg", "name": "Third Floor - Server Room"}
+    {"file": "15_Exterior_Building_Facade.jpg", "name": "Exterior - Building Facade"}
 ]
 
 def copy_images():
