@@ -158,6 +158,61 @@ export default function ProjectDetail() {
     }
   }
 
+  const handleUpdateRoomPhoto = async (roomId, file) => {
+    if (!file) return
+    setLoading(true)
+    try {
+      const photoUrl = await uploadRoomPhoto(id, roomId, file)
+      const { error: updateErr } = await supabase
+        .from('rooms')
+        .update({ photo_url: photoUrl })
+        .eq('id', roomId)
+
+      if (updateErr) throw updateErr
+      fetchData()
+    } catch (err) {
+      alert('Error updating room photo: ' + err.message)
+    } finally {
+      setLoading(false)
+    }
+  }
+
+  const handleDeleteRoomPhoto = async (room) => {
+    if (!confirm(`Delete the 360 photo for "${room.room_name}"? The room itself will not be deleted.`)) return
+    try {
+      const filePath = `tours/${id}/${room.id}.jpg`
+      const { error: storageErr } = await supabase.storage.from('tours').remove([filePath])
+      if (storageErr) console.warn('Could not delete file from storage', storageErr)
+
+      const { error: dbErr } = await supabase
+        .from('rooms')
+        .update({ photo_url: null })
+        .eq('id', room.id)
+
+      if (dbErr) throw dbErr
+
+      fetchData()
+    } catch (err) {
+      alert('Error deleting photo: ' + err.message)
+    }
+  }
+
+  const handleRenameRoom = async (room) => {
+    const newName = prompt(`Enter new name for "${room.room_name}":`, room.room_name)
+    if (!newName || newName.trim() === '' || newName === room.room_name) return
+    try {
+      const { error } = await supabase
+        .from('rooms')
+        .update({ room_name: newName.trim() })
+        .eq('id', room.id)
+
+      if (error) throw error
+      fetchData()
+    } catch (err) {
+      alert('Error renaming room: ' + err.message)
+    }
+  }
+
   const handleSetEntryRoom = async (roomId) => {
     const { error } = await supabase
       .from('projects')
@@ -346,28 +401,69 @@ export default function ProjectDetail() {
                   const isEntry = project.entry_room_id === room.id
                   return (
                     <div key={room.id} className="bg-gray-800/50 border border-gray-750 rounded-xl overflow-hidden hover:border-gray-700 transition-all flex flex-col justify-between">
-                      {room.photo_url ? (
-                        <div className="relative h-36 bg-black">
+                      <div className="relative h-36 bg-black group border-b border-gray-750/50">
+                        {room.photo_url ? (
                           <img src={room.photo_url} alt={room.room_name} className="w-full h-full object-cover" />
-                          {isEntry && (
-                            <div className="absolute top-2 left-2 bg-orange-500 text-white text-[10px] px-2 py-0.5 rounded-full font-bold uppercase tracking-wider flex items-center gap-0.5">
-                              <Star size={10} fill="white" /> Entry Room
-                            </div>
+                        ) : (
+                          <div className="w-full h-full bg-gray-800 flex flex-col items-center justify-center text-gray-650">
+                            <Image size={24} className="mb-1" />
+                            <span className="text-xs">No 360° Photo uploaded</span>
+                          </div>
+                        )}
+                        {isEntry && room.photo_url && (
+                          <div className="absolute top-2 left-2 bg-orange-500 text-white text-[10px] px-2 py-0.5 rounded-full font-bold uppercase tracking-wider flex items-center gap-0.5 z-10">
+                            <Star size={10} fill="white" /> Entry Room
+                          </div>
+                        )}
+                        
+                        {/* 360 Photo Edit & Delete Options */}
+                        <div className="absolute top-2 right-2 flex gap-1 bg-black/75 p-1 rounded-lg opacity-0 group-hover:opacity-100 transition-opacity z-10">
+                          <label
+                            htmlFor={`update-photo-${room.id}`}
+                            className="text-gray-400 hover:text-white cursor-pointer p-1 rounded hover:bg-gray-800 transition-colors block"
+                            title="Update 360 Photo"
+                          >
+                            <Edit size={14} />
+                          </label>
+                          <input
+                            type="file"
+                            accept="image/jpeg"
+                            id={`update-photo-${room.id}`}
+                            className="hidden"
+                            onChange={e => {
+                              const file = e.target.files?.[0]
+                              if (file) handleUpdateRoomPhoto(room.id, file)
+                            }}
+                          />
+                          {room.photo_url && (
+                            <button
+                              onClick={() => handleDeleteRoomPhoto(room)}
+                              className="text-gray-400 hover:text-red-400 cursor-pointer p-1 rounded hover:bg-gray-800 transition-colors"
+                              title="Delete 360 Photo"
+                            >
+                              <Trash2 size={14} />
+                            </button>
                           )}
                         </div>
-                      ) : (
-                        <div className="w-full h-36 bg-gray-800 flex flex-col items-center justify-center text-gray-650 border-b border-gray-750">
-                          <Image size={24} className="mb-1" />
-                          <span className="text-xs">No 360° Photo uploaded</span>
-                        </div>
-                      )}
+                      </div>
+                      
                       <div className="p-4">
-                        <div className="font-semibold text-white text-sm truncate">{room.room_name}</div>
+                        <div className="font-semibold text-white text-sm truncate flex items-center justify-between gap-2">
+                          <span className="truncate" title={room.room_name}>{room.room_name}</span>
+                          <button
+                            onClick={() => handleRenameRoom(room)}
+                            className="text-gray-400 hover:text-white cursor-pointer transition-colors p-1"
+                            title="Rename Room"
+                          >
+                            <Edit size={12} />
+                          </button>
+                        </div>
                         <div className="flex gap-3 mt-3">
                           <button
                             onClick={() => handleSetEntryRoom(room.id)}
                             className={`text-xs px-2.5 py-1 rounded-md font-semibold transition-colors cursor-pointer flex-1 text-center ${isEntry ? 'bg-orange-500/20 text-orange-400 border border-orange-500/30' : 'bg-gray-750 hover:bg-gray-700 text-gray-300'}`}
-                            disabled={isEntry}
+                            disabled={isEntry || !room.photo_url}
+                            title={!room.photo_url ? "Must upload a 360 photo first" : ""}
                           >
                             {isEntry ? 'Default Entry' : 'Set as Entry'}
                           </button>
@@ -375,7 +471,7 @@ export default function ProjectDetail() {
                             onClick={() => handleDeleteRoom(room.id)}
                             className="bg-red-950/30 hover:bg-red-950/60 border border-red-900/30 text-red-400 px-2.5 py-1 rounded-md text-xs font-semibold transition-colors cursor-pointer"
                           >
-                            Delete
+                            Delete Room
                           </button>
                         </div>
                       </div>
