@@ -28,3 +28,15 @@ supabase_credentials.txt
 # OS metadata
 .DS_Store
 Thumbs.db
+
+# Antigravity Brain directories
+brain/
+**/brain/
+
+# Hugging Face token
+hf_token.txt
+hf_tokens_registry.txt
+
+# Local generation cache directory
+/generated_360_images/
+
