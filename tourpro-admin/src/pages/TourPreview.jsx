@@ -11,6 +11,11 @@ export default function TourPreview() {
   const [hotspots, setHotspots] = useState([])
   const [currentRoom, setCurrentRoom] = useState(null)
   const [loading, setLoading] = useState(true)
+  const [expandedFloors, setExpandedFloors] = useState({
+    'Ground Floor': true,
+    'First Floor': true,
+    'Other': true
+  })
   const viewerRef = useRef(null)
   const pannellumRef = useRef(null)
 
@@ -42,6 +47,18 @@ export default function TourPreview() {
     }
     loadProject()
   }, [id])
+
+  useEffect(() => {
+    if (currentRoom) {
+      let floor = 'Other'
+      if (currentRoom.room_name.includes('Ground Floor')) {
+        floor = 'Ground Floor'
+      } else if (currentRoom.room_name.includes('First Floor')) {
+        floor = 'First Floor'
+      }
+      setExpandedFloors(prev => ({ ...prev, [floor]: true }))
+    }
+  }, [currentRoom])
 
   useEffect(() => {
     if (!currentRoom || !viewerRef.current) return
@@ -124,21 +141,65 @@ export default function TourPreview() {
             <ArrowLeft size={18} />
           </button>
         </div>
-        <div className="flex-1 overflow-y-auto p-2 space-y-1">
-          <div className="text-gray-500 text-[10px] uppercase tracking-wider font-semibold px-2 mb-2">Select Room</div>
-          {rooms.map(room => (
-            <button
-              key={room.id}
-              onClick={() => setCurrentRoom(room)}
-              className={`w-full text-left px-3 py-2 rounded-lg text-xs font-medium transition-colors cursor-pointer block truncate ${
-                currentRoom?.id === room.id
-                  ? 'bg-orange-500 text-white'
-                  : 'text-gray-400 hover:bg-gray-800 hover:text-white'
-              }`}
-            >
-              {room.room_name}
-            </button>
-          ))}
+        <div className="flex-1 overflow-y-auto p-2 space-y-3">
+          <div className="text-gray-500 text-[10px] uppercase tracking-wider font-semibold px-2 mb-1">Select Floor</div>
+          {(() => {
+            // Group rooms by floor
+            const groupedRooms = {}
+            rooms.forEach(room => {
+              let floor = 'Other'
+              let displayName = room.room_name
+              
+              if (room.room_name.includes('Ground Floor - ')) {
+                floor = 'Ground Floor'
+                displayName = room.room_name.replace('Ground Floor - ', '')
+              } else if (room.room_name.includes('First Floor - ')) {
+                floor = 'First Floor'
+                displayName = room.room_name.replace('First Floor - ', '')
+              } else if (room.room_name.includes('Ground Floor')) {
+                floor = 'Ground Floor'
+              } else if (room.room_name.includes('First Floor')) {
+                floor = 'First Floor'
+              }
+              
+              if (!groupedRooms[floor]) {
+                groupedRooms[floor] = []
+              }
+              groupedRooms[floor].push({ ...room, displayName })
+            })
+
+            const floorOrder = ['Ground Floor', 'First Floor', 'Other']
+            const sortedFloors = floorOrder.filter(f => groupedRooms[f] && groupedRooms[f].length > 0)
+
+            return sortedFloors.map(floor => (
+              <div key={floor} className="space-y-1">
+                <button
+                  onClick={() => setExpandedFloors(prev => ({ ...prev, [floor]: !prev[floor] }))}
+                  className="w-full flex items-center justify-between px-2 py-1.5 bg-gray-800/40 hover:bg-gray-800/80 rounded-lg text-gray-300 hover:text-white text-xs font-semibold transition-colors cursor-pointer select-none"
+                >
+                  <span>{floor}</span>
+                  <span className="text-[9px] text-gray-500">{expandedFloors[floor] ? '▼' : '▶'}</span>
+                </button>
+                {expandedFloors[floor] && (
+                  <div className="pl-1 pt-1 space-y-1 border-l border-gray-800 ml-2">
+                    {groupedRooms[floor].map(room => (
+                      <button
+                        key={room.id}
+                        onClick={() => setCurrentRoom(room)}
+                        className={`w-full text-left px-3 py-2 rounded-lg text-xs font-medium transition-colors cursor-pointer block truncate ${
+                          currentRoom?.id === room.id
+                            ? 'bg-orange-500 text-white font-semibold'
+                            : 'text-gray-400 hover:bg-gray-800/60 hover:text-white'
+                        }`}
+                      >
+                        {room.displayName}
+                      </button>
+                    ))}
+                  </div>
+                )}
+              </div>
+            ))
+          })()}
         </div>
       </div>
 

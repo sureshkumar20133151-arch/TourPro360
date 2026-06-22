@@ -393,6 +393,11 @@ async function loadSingleTour(container, token) {
 
   const entryRoom = rooms.find(r => r.id === project.entry_room_id) || rooms[0]
   let currentViewer = null
+  const expandedFloors = {
+    'Ground Floor': true,
+    'First Floor': true,
+    'Other': true
+  }
 
   // Configure Container styling for viewer
   container.style.position = 'relative'
@@ -441,19 +446,107 @@ async function loadSingleTour(container, token) {
 
   function updateRoomListUI(activeRoom) {
     roomListContainer.innerHTML = ''
+    
+    // Group rooms by floor
+    const groupedRooms = {}
     rooms.forEach(room => {
-      const btn = document.createElement('button')
-      btn.className = `tourpro-room-btn ${room.id === activeRoom.id ? 'active' : ''}`
-      btn.textContent = room.room_name
-      btn.addEventListener('click', () => {
-        panel.classList.remove('open')
-        loadRoom(room)
+      let floor = 'Other'
+      let displayName = room.room_name
+      
+      if (room.room_name.includes('Ground Floor - ')) {
+        floor = 'Ground Floor'
+        displayName = room.room_name.replace('Ground Floor - ', '')
+      } else if (room.room_name.includes('First Floor - ')) {
+        floor = 'First Floor'
+        displayName = room.room_name.replace('First Floor - ', '')
+      } else if (room.room_name.includes('Ground Floor')) {
+        floor = 'Ground Floor'
+      } else if (room.room_name.includes('First Floor')) {
+        floor = 'First Floor'
+      }
+      
+      if (!groupedRooms[floor]) {
+        groupedRooms[floor] = []
+      }
+      groupedRooms[floor].push({ ...room, displayName })
+    })
+
+    const floorOrder = ['Ground Floor', 'First Floor', 'Other']
+    const sortedFloors = floorOrder.filter(f => groupedRooms[f] && groupedRooms[f].length > 0)
+
+    sortedFloors.forEach(floor => {
+      // Create Floor Header toggle button
+      const floorHeader = document.createElement('button')
+      floorHeader.style.width = '100%'
+      floorHeader.style.display = 'flex'
+      floorHeader.style.alignItems = 'center'
+      floorHeader.style.justifyContent = 'space-between'
+      floorHeader.style.background = 'rgba(255,255,255,0.03)'
+      floorHeader.style.border = '1px solid rgba(255,255,255,0.05)'
+      floorHeader.style.color = '#e2e8f0'
+      floorHeader.style.padding = '8px 12px'
+      floorHeader.style.borderRadius = '8px'
+      floorHeader.style.cursor = 'pointer'
+      floorHeader.style.fontSize = '12px'
+      floorHeader.style.fontWeight = '600'
+      floorHeader.style.textAlign = 'left'
+      floorHeader.style.marginTop = '6px'
+      floorHeader.style.fontFamily = 'system-ui, -apple-system, sans-serif'
+      
+      const titleSpan = document.createElement('span')
+      titleSpan.textContent = floor
+      floorHeader.appendChild(titleSpan)
+      
+      const arrowSpan = document.createElement('span')
+      arrowSpan.style.fontSize = '9px'
+      arrowSpan.style.color = 'rgba(255,255,255,0.4)'
+      arrowSpan.textContent = expandedFloors[floor] ? '▼' : '▶'
+      floorHeader.appendChild(arrowSpan)
+      
+      roomListContainer.appendChild(floorHeader)
+      
+      // Create rooms container for this floor
+      const floorRoomsContainer = document.createElement('div')
+      floorRoomsContainer.style.display = expandedFloors[floor] ? 'flex' : 'none'
+      floorRoomsContainer.style.flexDirection = 'column'
+      floorRoomsContainer.style.gap = '4px'
+      floorRoomsContainer.style.paddingLeft = '8px'
+      floorRoomsContainer.style.marginTop = '4px'
+      floorRoomsContainer.style.borderLeft = '1px solid rgba(255,255,255,0.05)'
+      floorRoomsContainer.style.marginLeft = '8px'
+      
+      groupedRooms[floor].forEach(room => {
+        const btn = document.createElement('button')
+        btn.className = `tourpro-room-btn ${room.id === activeRoom.id ? 'active' : ''}`
+        btn.textContent = room.displayName
+        btn.style.width = '100%'
+        btn.addEventListener('click', () => {
+          panel.classList.remove('open')
+          loadRoom(room)
+        })
+        floorRoomsContainer.appendChild(btn)
       })
-      roomListContainer.appendChild(btn)
+      
+      roomListContainer.appendChild(floorRoomsContainer)
+      
+      // Toggle logic
+      floorHeader.addEventListener('click', () => {
+        expandedFloors[floor] = !expandedFloors[floor]
+        arrowSpan.textContent = expandedFloors[floor] ? '▼' : '▶'
+        floorRoomsContainer.style.display = expandedFloors[floor] ? 'flex' : 'none'
+      })
     })
   }
 
   function loadRoom(room) {
+    let floor = 'Other'
+    if (room.room_name.includes('Ground Floor')) {
+      floor = 'Ground Floor'
+    } else if (room.room_name.includes('First Floor')) {
+      floor = 'First Floor'
+    }
+    expandedFloors[floor] = true
+
     if (currentViewer) {
       currentViewer.destroy()
     }
