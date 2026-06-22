@@ -1,0 +1,149 @@
+{
+  "projects": [
+    {
+      "id": "309f7ab7-5e71-4be3-86c5-ee5fe22f724e",
+      "building_name": "Home ",
+      "client_name": "Suresh kumar ",
+      "entry_room_id": "c98370a8-060b-4328-9624-4c9740d2672a",
+      "is_live": true,
+      "embed_token": "2258328a-e44d-44ba-96d1-5bf51cecd851",
+      "floorplan_url": "/villa_ground_floor.png",
+      "auto_rotate": true,
+      "auto_rotate_speed": -2.0,
+      "show_compass": true,
+      "building_type": "Residential",
+      "city": "Alangkulam "
+    }
+  ],
+  "rooms": [
+    {
+      "id": "ea01137a-3ecb-403c-8909-64371f43b589",
+      "project_id": "309f7ab7-5e71-4be3-86c5-ee5fe22f724e",
+      "room_name": "Ground Floor - Car Portico",
+      "photo_url": "/generated_360_images/01_Ground_Floor_Car_Portico.jpg",
+      "sort_order": 0,
+      "floorplan_x": 20.0,
+      "floorplan_y": 80.0
+    },
+    {
+      "id": "c98370a8-060b-4328-9624-4c9740d2672a",
+      "project_id": "309f7ab7-5e71-4be3-86c5-ee5fe22f724e",
+      "room_name": "Ground Floor - Entrance Lobby",
+      "photo_url": "/generated_360_images/02_Ground_Floor_Entrance_Lobby.jpg",
+      "sort_order": 1,
+      "floorplan_x": 50.0,
+      "floorplan_y": 80.0
+    },
+    {
+      "id": "90808f88-c613-4b5f-b87f-774dacc9ae00",
+      "project_id": "309f7ab7-5e71-4be3-86c5-ee5fe22f724e",
+      "room_name": "Ground Floor - Dining Hall",
+      "photo_url": "/generated_360_images/03_Ground_Floor_Dining_Hall.jpg",
+      "sort_order": 2,
+      "floorplan_x": 50.0,
+      "floorplan_y": 50.0
+    },
+    {
+      "id": "fbfbf933-877a-4bf6-9da7-15ca2a80c395",
+      "project_id": "309f7ab7-5e71-4be3-86c5-ee5fe22f724e",
+      "room_name": "First Floor - Upstairs Hall",
+      "photo_url": "/generated_360_images/08_First_Floor_Upstairs_Hall.jpg",
+      "sort_order": 7,
+      "floorplan_x": null,
+      "floorplan_y": null
+    },
+    {
+      "id": "ca0f7b10-032c-4f8e-8752-c7d97bc47918",
+      "project_id": "309f7ab7-5e71-4be3-86c5-ee5fe22f724e",
+      "room_name": "First Floor - Gym Room",
+      "photo_url": "/generated_360_images/09_First_Floor_Gym_Room.jpg",
+      "sort_order": 8,
+      "floorplan_x": null,
+      "floorplan_y": null
+    },
+    {
+      "id": "072f1601-e0e8-4421-9dca-3d06c55ade34",
+      "project_id": "309f7ab7-5e71-4be3-86c5-ee5fe22f724e",
+      "room_name": "First Floor - Kids Bedroom",
+      "photo_url": "/generated_360_images/10_First_Floor_Kids_Bedroom.jpg",
+      "sort_order": 9,
+      "floorplan_x": null,
+      "floorplan_y": null
+    },
+    {
+      "id": "fa6281cf-c101-49f2-8e21-2824043c0e21",
+      "project_id": "309f7ab7-5e71-4be3-86c5-ee5fe22f724e",
+      "room_name": "First Floor - Master Bedroom",
+      "photo_url": "/generated_360_images/11_First_Floor_Master_Bedroom.jpg",
+      "sort_order": 10,
+      "floorplan_x": null,
+      "floorplan_y": null
+    },
+    {
+      "id": "fc81989c-f386-49f5-be88-b92431d67bdc",
+      "project_id": "309f7ab7-5e71-4be3-86c5-ee5fe22f724e",
+      "room_name": "First Floor - Master Bathroom",
+      "photo_url": "/generated_360_images/12_First_Floor_Master_Bathroom.jpg",
+      "sort_order": 11,
+      "floorplan_x": null,
+      "floorplan_y": null
+    },
+    {
+      "id": "87b574ef-7117-458f-8f7f-9cfe746c2793",
+      "project_id": "309f7ab7-5e71-4be3-86c5-ee5fe22f724e",
+      "room_name": "First Floor - Open Terrace Balcony",
+      "photo_url": "/generated_360_images/13_First_Floor_Open_Terrace_Balcony.jpg",
+      "sort_order": 12,
+      "floorplan_x": null,
+      "floorplan_y": null
+    },
+    {
+      "id": "3292c290-f933-404d-983e-d68e1586a844",
+      "project_id": "309f7ab7-5e71-4be3-86c5-ee5fe22f724e",
+      "room_name": "Ground Floor - Modular Kitchen",
+      "photo_url": "/generated_360_images/04_Ground_Floor_Modular_Kitchen.jpg",
+      "sort_order": 3,
+      "floorplan_x": 25.0,
+      "floorplan_y": 35.0
+    },
+    {
+      "id": "276c43fe-95bc-484f-be62-6fbeca2dcc44",
+      "project_id": "309f7ab7-5e71-4be3-86c5-ee5fe22f724e",
+      "room_name": "Ground Floor - Main Hall (Double Height)",
+      "photo_url": "/generated_360_images/05_Ground_Floor_Main_Hall.jpg",
+      "sort_order": 4,
+      "floorplan_x": 75.0,
+      "floorplan_y": 50.0
+    },
+    {
+      "id": "bdead48d-0bc0-43d1-8312-64874a2c1949",
+      "project_id": "309f7ab7-5e71-4be3-86c5-ee5fe22f724e",
+      "room_name": "Ground Floor - Guest Bedroom",
+      "photo_url": "/generated_360_images/06_Ground_Floor_Guest_Bedroom.jpg",
+      "sort_order": 5,
+      "floorplan_x": 75.0,
+      "floorplan_y": 20.0
+    },
+    {
+      "id": "21c59a84-e12c-498e-a8c7-acaadf5305c8",
+      "project_id": "309f7ab7-5e71-4be3-86c5-ee5fe22f724e",
+      "room_name": "Ground Floor - Common Bathroom",
+      "photo_url": "/generated_360_images/07_Ground_Floor_Common_Bathroom.jpg",
+      "sort_order": 6,
+      "floorplan_x": 50.0,
+      "floorplan_y": 20.0
+    }
+  ],
+  "hotspots": [
+    {
+      "id": "5870fc74-509e-4957-aaa9-caf5a26b52f0",
+      "from_room_id": "c98370a8-060b-4328-9624-4c9740d2672a",
+      "to_room_id": null,
+      "pitch": 5.0,
+      "yaw": 150.0,
+      "label": "Entrance Door Details",
+      "type": "info",
+      "info_text": "Solid Burma Teak Wood double door featuring an electronic biometric smart lock and heavy brass handles."
+    }
+  ]
+}

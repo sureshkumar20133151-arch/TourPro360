@@ -1,8 +1,8 @@
-import { useEffect, useState } from 'react'
+import { useEffect, useState, useRef } from 'react'
 import { useParams, useNavigate } from 'react-router-dom'
 import { supabase } from '../lib/supabase'
-import { uploadRoomPhoto } from '../lib/uploadPhoto'
-import { Building2, Eye, Code, Trash2, ArrowLeft, Plus, Image, Star, Edit, Save, X } from 'lucide-react'
+import { uploadRoomPhoto, uploadFloorplan } from '../lib/uploadPhoto'
+import { Building2, Eye, Code, Trash2, ArrowLeft, Plus, Image, Star, Edit, Save, X, MapPin, Compass, HelpCircle, Info } from 'lucide-react'
 
 const BUILDING_TYPES = ['Residential', 'Commercial', 'Villa', 'Apartment', 'Plot']
 const ROOM_PRESETS = [
@@ -26,7 +26,10 @@ export default function ProjectDetail() {
     client_name: '',
     building_name: '',
     city: '',
-    building_type: 'Residential'
+    building_type: 'Residential',
+    auto_rotate: true,
+    auto_rotate_speed: -2.0,
+    show_compass: false
   })
 
   // Add Room state
@@ -41,7 +44,13 @@ export default function ProjectDetail() {
   const [pitch, setPitch] = useState(0)
   const [yaw, setYaw] = useState(0)
   const [hotspotLabel, setHotspotLabel] = useState('')
+  const [hotspotType, setHotspotType] = useState('scene')
+  const [infoText, setInfoText] = useState('')
   const [addingHotspot, setAddingHotspot] = useState(false)
+
+  // Floor Plan Config state
+  const [uploadingFloorplanState, setUploadingFloorplanState] = useState(false)
+  const [selectedRoomForMapping, setSelectedRoomForMapping] = useState('')
 
   const fetchData = async () => {
     setLoading(true)
@@ -57,7 +66,10 @@ export default function ProjectDetail() {
       client_name: proj.client_name,
       building_name: proj.building_name,
       city: proj.city || '',
-      building_type: proj.building_type
+      building_type: proj.building_type,
+      auto_rotate: proj.auto_rotate ?? true,
+      auto_rotate_speed: proj.auto_rotate_speed ?? -2.0,
+      show_compass: proj.show_compass ?? false
     })
 
     // Fetch rooms
@@ -226,19 +238,39 @@ export default function ProjectDetail() {
   }
 
   const handleAddHotspot = async () => {
-    if (!fromRoom || !toRoom || fromRoom === toRoom) {
-      alert('Please select valid From and To rooms.')
+    if (!fromRoom) {
+      alert('Please select a From room.')
       return
     }
+    if (hotspotType === 'scene' && (!toRoom || fromRoom === toRoom)) {
+      alert('Please select a valid destination room.')
+      return
+    }
+    if (hotspotType === 'info' && !infoText.trim()) {
+      alert('Please enter info text.')
+      return
+    }
+    
     setAddingHotspot(true)
     const toRoomName = rooms.find(r => r.id === toRoom)?.room_name
-    const { error } = await supabase.from('hotspots').insert({
+    
+    const insertData = {
       from_room_id: fromRoom,
-      to_room_id: toRoom,
       pitch: parseFloat(pitch) || 0,
       yaw: parseFloat(yaw) || 0,
-      label: hotspotLabel || `Go to ${toRoomName}`
-    })
+      type: hotspotType,
+      label: hotspotLabel || (hotspotType === 'scene' ? `Go to ${toRoomName}` : 'Info')
+    }
+    
+    if (hotspotType === 'scene') {
+      insertData.to_room_id = toRoom
+      insertData.info_text = null
+    } else {
+      insertData.to_room_id = null
+      insertData.info_text = infoText.trim()
+    }
+
+    const { error } = await supabase.from('hotspots').insert(insertData)
     setAddingHotspot(false)
     if (!error) {
       setFromRoom('')
@@ -246,6 +278,8 @@ export default function ProjectDetail() {
       setPitch(0)
       setYaw(0)
       setHotspotLabel('')
+      setInfoText('')
+      setHotspotType('scene')
       fetchData()
     } else {
       alert(error.message)
@@ -261,6 +295,72 @@ export default function ProjectDetail() {
       alert(error.message)
     }
   }
+
+  const handleUploadFloorplan = async (e) => {
+    const file = e.target.files?.[0]
+    if (!file) return
+    setUploadingFloorplanState(true)
+    try {
+      const url = await uploadFloorplan(id, file)
+      const { error } = await supabase
+        .from('projects')
+        .update({ floorplan_url: url })
+        .eq('id', id)
+        
+      if (error) throw error
+      fetchData()
+    } catch (err) {
+      alert('Error uploading floor plan: ' + err.message)
+    } finally {
+      setUploadingFloorplanState(false)
+    }
+  }
+
+  const handleDeleteFloorplan = async () => {
+    if (!confirm('Are you sure you want to delete the floor plan and clear all room coordinates?')) return
+    setLoading(true)
+    try {
+      const { error: projErr } = await supabase
+        .from('projects')
+        .update({ floorplan_url: null })
+        .eq('id', id)
+      if (projErr) throw projErr
+      
+      const { error: roomsErr } = await supabase
+        .from('rooms')
+        .update({ floorplan_x: null, floorplan_y: null })
+        .eq('project_id', id)
+      if (roomsErr) throw roomsErr
+      
+      fetchData()
+    } catch (err) {
+      alert('Error deleting floor plan: ' + err.message)
+    } finally {
+      setLoading(false)
+    }
+  }
+
+  const handleFloorplanClick = async (e) => {
+    if (!selectedRoomForMapping) {
+      alert('Please select a room from the dropdown first.')
+      return
+    }
+    const rect = e.currentTarget.getBoundingClientRect()
+    const x = ((e.clientX - rect.left) / rect.width) * 100
+    const y = ((e.clientY - rect.top) / rect.height) * 100
+    
+    const { error } = await supabase
+      .from('rooms')
+      .update({ floorplan_x: parseFloat(x.toFixed(2)), floorplan_y: parseFloat(y.toFixed(2)) })
+      .eq('id', selectedRoomForMapping)
+      
+    if (!error) {
+      fetchData()
+    } else {
+      alert(error.message)
+    }
+  }
+
 
   if (loading && !project) {
     return <div className="p-8 text-gray-400">Loading project details...</div>
@@ -319,7 +419,44 @@ export default function ProjectDetail() {
                   {BUILDING_TYPES.map(t => <option key={t} value={t}>{t}</option>)}
                 </select>
               </div>
+              
+              {/* v2.0 Settings fields */}
+              <div className="flex items-center gap-2 pt-4">
+                <input
+                  type="checkbox"
+                  id="auto_rotate"
+                  checked={metadataForm.auto_rotate}
+                  onChange={e => setMetadataForm({ ...metadataForm, auto_rotate: e.target.checked })}
+                  className="accent-orange-500 h-4 w-4"
+                />
+                <label htmlFor="auto_rotate" className="text-gray-300 text-sm cursor-pointer select-none">Auto Rotate 360° View</label>
+              </div>
+              
+              {metadataForm.auto_rotate && (
+                <div>
+                  <label className="text-gray-400 text-xs mb-1 block font-medium">Auto Rotate Speed (negative is right, e.g. -2.0)</label>
+                  <input
+                    type="number"
+                    step="0.5"
+                    value={metadataForm.auto_rotate_speed}
+                    onChange={e => setMetadataForm({ ...metadataForm, auto_rotate_speed: parseFloat(e.target.value) || 0 })}
+                    className="w-full bg-gray-800 border border-gray-750 rounded-xl px-4 py-2.5 text-white focus:outline-none focus:border-orange-500 text-sm"
+                  />
+                </div>
+              )}
+              
+              <div className="flex items-center gap-2 pt-4 md:col-span-2">
+                <input
+                  type="checkbox"
+                  id="show_compass"
+                  checked={metadataForm.show_compass}
+                  onChange={e => setMetadataForm({ ...metadataForm, show_compass: e.target.checked })}
+                  className="accent-orange-500 h-4 w-4"
+                />
+                <label htmlFor="show_compass" className="text-gray-300 text-sm cursor-pointer select-none">Show Compass in 360° Viewer</label>
+              </div>
             </div>
+
             <div className="flex justify-end gap-3 mt-4">
               <button
                 onClick={() => setIsEditingMetadata(false)}
@@ -481,6 +618,108 @@ export default function ProjectDetail() {
               </div>
             )}
           </div>
+
+          {/* Floor Plan Config Card */}
+          <div className="bg-gray-900 border border-gray-800 rounded-2xl p-6">
+            <h2 className="text-lg font-bold text-white mb-4 flex items-center gap-2 font-display">
+              <MapPin size={20} className="text-orange-400" /> Floor Plan & Minimap Config
+            </h2>
+            
+            {!project.floorplan_url ? (
+              <div className="border border-dashed border-gray-800 rounded-xl p-8 text-center text-gray-500 flex flex-col items-center justify-center">
+                <Image size={32} className="mb-2 text-gray-650" />
+                <p className="text-sm font-medium text-gray-300">No floor plan uploaded</p>
+                <p className="text-xs text-gray-600 mt-1 mb-4">Upload a 2D floor plan layout to enable the interactive viewer minimap overlay.</p>
+                <label className="bg-orange-500 hover:bg-orange-600 text-white px-4 py-2 rounded-xl text-xs font-semibold cursor-pointer transition-colors">
+                  {uploadingFloorplanState ? 'Uploading...' : 'Upload Floor Plan'}
+                  <input
+                    type="file"
+                    accept="image/*"
+                    onChange={handleUploadFloorplan}
+                    disabled={uploadingFloorplanState}
+                    className="hidden"
+                  />
+                </label>
+              </div>
+            ) : (
+              <div className="space-y-4">
+                <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 bg-gray-850 p-4 rounded-xl border border-gray-800">
+                  <div className="space-y-1">
+                    <label className="text-gray-400 text-xs font-medium block">Room to Map</label>
+                    <select
+                      value={selectedRoomForMapping}
+                      onChange={e => setSelectedRoomForMapping(e.target.value)}
+                      className="bg-gray-800 border border-gray-700 rounded-lg px-3 py-2 text-white text-xs focus:outline-none focus:border-orange-500 min-w-[200px]"
+                    >
+                      <option value="">Select room to place...</option>
+                      {rooms.map(r => (
+                        <option key={r.id} value={r.id}>
+                          {r.room_name} {r.floorplan_x !== null ? '✓' : '(Not mapped)'}
+                        </option>
+                      ))}
+                    </select>
+                  </div>
+                  <div className="flex gap-2">
+                    {selectedRoomForMapping && rooms.find(r => r.id === selectedRoomForMapping)?.floorplan_x !== null && (
+                      <button
+                        onClick={async () => {
+                          const { error } = await supabase
+                            .from('rooms')
+                            .update({ floorplan_x: null, floorplan_y: null })
+                            .eq('id', selectedRoomForMapping)
+                          if (!error) fetchData()
+                        }}
+                        className="bg-gray-850 hover:bg-gray-800 text-gray-400 hover:text-white px-3 py-2 rounded-lg text-xs font-medium border border-gray-750 transition-colors cursor-pointer"
+                      >
+                        Clear Marker
+                      </button>
+                    )}
+                    <button
+                      onClick={handleDeleteFloorplan}
+                      className="bg-red-950/30 hover:bg-red-950/60 border border-red-900/30 text-red-400 px-3 py-2 rounded-lg text-xs font-semibold transition-colors cursor-pointer"
+                    >
+                      Remove Floor Plan
+                    </button>
+                  </div>
+                </div>
+                
+                <p className="text-xs text-gray-500">
+                  {selectedRoomForMapping
+                    ? `Click on the map below to position the marker for "${rooms.find(r => r.id === selectedRoomForMapping)?.room_name}".`
+                    : 'Select a room from the dropdown, then click on the map to set its marker position.'}
+                </p>
+                
+                <div className="border border-gray-850 rounded-xl bg-gray-950 p-2 flex justify-center overflow-auto">
+                  <div className="relative inline-block max-w-full">
+                    <img
+                      src={project.floorplan_url}
+                      alt="Floor Plan Setup"
+                      className="max-h-96 w-auto cursor-crosshair object-contain select-none rounded-lg"
+                      onClick={handleFloorplanClick}
+                    />
+                    {rooms.filter(r => r.floorplan_x !== null && r.floorplan_y !== null).map(r => (
+                      <div
+                        key={r.id}
+                        style={{ left: `${r.floorplan_x}%`, top: `${r.floorplan_y}%` }}
+                        className={`absolute -translate-x-1/2 -translate-y-1/2 w-5 h-5 rounded-full border-2 border-white flex items-center justify-center cursor-pointer transition-all shadow-md ${
+                          selectedRoomForMapping === r.id ? 'bg-orange-500 scale-125 z-10 shadow-orange-500/50' : 'bg-gray-800'
+                        }`}
+                        title={r.room_name}
+                        onClick={(e) => {
+                          e.stopPropagation() // Don't trigger map click
+                          setSelectedRoomForMapping(r.id)
+                        }}
+                      >
+                        <span className="text-[8px] font-bold text-white">
+                          {rooms.findIndex(room => room.id === r.id) + 1}
+                        </span>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              </div>
+            )}
+          </div>
         </div>
 
         {/* Section C - Hotspots and connections manager (1 col) */}
@@ -495,6 +734,24 @@ export default function ProjectDetail() {
               <h3 className="text-white text-sm font-semibold mb-2">Add Connection Arrow</h3>
 
               <div>
+                <label className="text-gray-400 text-xs mb-1.5 block font-medium">Type</label>
+                <div className="grid grid-cols-2 gap-2">
+                  <button
+                    onClick={() => setHotspotType('scene')}
+                    className={`py-1.5 px-3 rounded-lg text-xs font-semibold border transition-all cursor-pointer text-center ${hotspotType === 'scene' ? 'bg-orange-500 border-orange-500 text-white' : 'bg-gray-800 border-gray-750 text-gray-400'}`}
+                  >
+                    Link to Room
+                  </button>
+                  <button
+                    onClick={() => setHotspotType('info')}
+                    className={`py-1.5 px-3 rounded-lg text-xs font-semibold border transition-all cursor-pointer text-center ${hotspotType === 'info' ? 'bg-orange-500 border-orange-500 text-white' : 'bg-gray-800 border-gray-750 text-gray-400'}`}
+                  >
+                    Info Popup
+                  </button>
+                </div>
+              </div>
+
+              <div>
                 <label className="text-gray-400 text-xs mb-1 block">From Room (Source)</label>
                 <select
                   value={fromRoom}
@@ -506,18 +763,31 @@ export default function ProjectDetail() {
                 </select>
               </div>
 
-              <div>
-                <label className="text-gray-400 text-xs mb-1 block">To Room (Destination)</label>
-                <select
-                  value={toRoom}
-                  onChange={e => setToRoom(e.target.value)}
-                  className="w-full bg-gray-800 border border-gray-700 rounded-lg px-3 py-2 text-white text-xs focus:outline-none focus:border-orange-500"
-                  disabled={!fromRoom}
-                >
-                  <option value="">Select room...</option>
-                  {rooms.filter(r => r.id !== fromRoom).map(r => <option key={r.id} value={r.id}>{r.room_name}</option>)}
-                </select>
-              </div>
+              {hotspotType === 'scene' ? (
+                <div>
+                  <label className="text-gray-400 text-xs mb-1 block">To Room (Destination)</label>
+                  <select
+                    value={toRoom}
+                    onChange={e => setToRoom(e.target.value)}
+                    className="w-full bg-gray-800 border border-gray-700 rounded-lg px-3 py-2 text-white text-xs focus:outline-none focus:border-orange-500"
+                    disabled={!fromRoom}
+                  >
+                    <option value="">Select room...</option>
+                    {rooms.filter(r => r.id !== fromRoom).map(r => <option key={r.id} value={r.id}>{r.room_name}</option>)}
+                  </select>
+                </div>
+              ) : (
+                <div>
+                  <label className="text-gray-400 text-xs mb-1 block">Info Text (Popup content)</label>
+                  <textarea
+                    placeholder="e.g. Dimensions: 12ft x 14ft. Solid teakwood double door."
+                    value={infoText}
+                    onChange={e => setInfoText(e.target.value)}
+                    className="w-full bg-gray-800 border border-gray-700 rounded-lg px-3 py-2 text-white placeholder-gray-550 text-xs focus:outline-none focus:border-orange-500 h-16 resize-none"
+                    disabled={!fromRoom}
+                  />
+                </div>
+              )}
 
               <div className="grid grid-cols-2 gap-3">
                 <div>
@@ -548,7 +818,7 @@ export default function ProjectDetail() {
                 <label className="text-gray-400 text-xs mb-1 block">Label / Tooltip text</label>
                 <input
                   type="text"
-                  placeholder="e.g. Go to Kitchen"
+                  placeholder={hotspotType === 'scene' ? 'e.g. Go to Kitchen' : 'e.g. View Room Details'}
                   value={hotspotLabel}
                   onChange={e => setHotspotLabel(e.target.value)}
                   className="w-full bg-gray-800 border border-gray-700 rounded-lg px-3 py-2 text-white placeholder-gray-550 text-xs focus:outline-none focus:border-orange-500"
@@ -557,7 +827,7 @@ export default function ProjectDetail() {
 
               <button
                 onClick={handleAddHotspot}
-                disabled={addingHotspot || !fromRoom || !toRoom}
+                disabled={addingHotspot || !fromRoom || (hotspotType === 'scene' ? !toRoom : !infoText.trim())}
                 className="w-full bg-orange-500 hover:bg-orange-600 disabled:opacity-50 text-white font-semibold py-2 rounded-lg text-xs transition-colors cursor-pointer"
               >
                 {addingHotspot ? 'Adding...' : 'Add Connection'}

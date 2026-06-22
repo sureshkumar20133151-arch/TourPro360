@@ -62,3 +62,27 @@ body {
   font-family: var(--font-ui) !important;
   box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06) !important;
 }
+
+.tour-info-hotspot {
+  width: 32px;
+  height: 32px;
+  background: rgba(59, 130, 246, 0.85);
+  border: 2.5px solid white;
+  border-radius: 50%;
+  cursor: pointer;
+  box-shadow: 0 0 8px rgba(0, 0, 0, 0.6);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: transform 0.25s cubic-bezier(0.4, 0, 0.2, 1), background-color 0.2s;
+}
+.tour-info-hotspot:hover {
+  transform: scale(1.2) rotate(15deg);
+  background: rgba(37, 99, 235, 0.95);
+}
+.tour-info-hotspot::after {
+  content: 'ℹ';
+  color: white;
+  font-size: 13px;
+  font-weight: bold;
+}

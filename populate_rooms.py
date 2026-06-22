@@ -26,7 +26,9 @@ ROOMS = [
     {"file": "10_First_Floor_Kids_Bedroom.jpg", "name": "First Floor - Kids Bedroom"},
     {"file": "11_First_Floor_Master_Bedroom.jpg", "name": "First Floor - Master Bedroom"},
     {"file": "12_First_Floor_Master_Bathroom.jpg", "name": "First Floor - Master Bathroom"},
-    {"file": "13_First_Floor_Open_Terrace_Balcony.jpg", "name": "First Floor - Open Terrace Balcony"}
+    {"file": "13_First_Floor_Open_Terrace_Balcony.jpg", "name": "First Floor - Open Terrace Balcony"},
+    {"file": "14_Third_Floor_Observatory_Deck.jpg", "name": "Third Floor - Observatory Deck"},
+    {"file": "15_Third_Floor_Server_Room.jpg", "name": "Third Floor - Server Room"}
 ]
 
 def copy_images():

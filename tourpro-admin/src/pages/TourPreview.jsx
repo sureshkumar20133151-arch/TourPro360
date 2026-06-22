@@ -1,7 +1,7 @@
 import { useEffect, useState, useRef } from 'react'
 import { useParams, useNavigate } from 'react-router-dom'
 import { supabase } from '../lib/supabase'
-import { ArrowLeft, Maximize2, ShieldAlert } from 'lucide-react'
+import { ArrowLeft, Maximize2, ShieldAlert, MapPin, X, Info, HelpCircle, Plus } from 'lucide-react'
 
 export default function TourPreview() {
   const { id } = useParams()
@@ -14,10 +14,71 @@ export default function TourPreview() {
   const [expandedFloors, setExpandedFloors] = useState({
     'Ground Floor': true,
     'First Floor': true,
+    'Third Floor': true,
     'Other': true
   })
   const viewerRef = useRef(null)
   const pannellumRef = useRef(null)
+
+  const [isVisualHotspotMode, setIsVisualHotspotMode] = useState(false)
+  const [showAddVisualHotspotModal, setShowAddVisualHotspotModal] = useState(false)
+  const [newHotspotCoords, setNewHotspotCoords] = useState({ pitch: 0, yaw: 0 })
+  const [visualHotspotForm, setVisualHotspotForm] = useState({ type: 'scene', label: '', toRoom: '', infoText: '' })
+  const [infoPopupContent, setInfoPopupContent] = useState(null)
+  const [showMinimap, setShowMinimap] = useState(false)
+
+  const isVisualHotspotModeRef = useRef(isVisualHotspotMode)
+  useEffect(() => {
+    isVisualHotspotModeRef.current = isVisualHotspotMode
+  }, [isVisualHotspotMode])
+
+  const mouseDownPos = useRef({ x: 0, y: 0 })
+  const handleViewerMouseDown = (e) => {
+    mouseDownPos.current = { x: e.clientX, y: e.clientY }
+  }
+
+  const handleViewerMouseUp = (e) => {
+    if (!isVisualHotspotModeRef.current || !pannellumRef.current) return
+    const deltaX = Math.abs(e.clientX - mouseDownPos.current.x)
+    const deltaY = Math.abs(e.clientY - mouseDownPos.current.y)
+    if (deltaX < 5 && deltaY < 5) {
+      const coords = pannellumRef.current.mouseEventToCoords(e)
+      if (coords) {
+        const [clickedPitch, clickedYaw] = coords
+        setNewHotspotCoords({ pitch: parseFloat(clickedPitch.toFixed(2)), yaw: parseFloat(clickedYaw.toFixed(2)) })
+        const firstOtherRoom = rooms.find(r => r.id !== currentRoom.id)?.id || ''
+        setVisualHotspotForm({ type: 'scene', label: '', toRoom: firstOtherRoom, infoText: '' })
+        setShowAddVisualHotspotModal(true)
+      }
+    }
+  }
+
+  const handleSaveVisualHotspot = async () => {
+    const insertData = {
+      from_room_id: currentRoom.id,
+      pitch: newHotspotCoords.pitch,
+      yaw: newHotspotCoords.yaw,
+      type: visualHotspotForm.type,
+      label: visualHotspotForm.label || (visualHotspotForm.type === 'scene' ? `Go to ${rooms.find(r => r.id === visualHotspotForm.toRoom)?.room_name}` : 'Info')
+    }
+    
+    if (visualHotspotForm.type === 'scene') {
+      insertData.to_room_id = visualHotspotForm.toRoom
+      insertData.info_text = null
+    } else {
+      insertData.to_room_id = null
+      insertData.info_text = visualHotspotForm.infoText.trim()
+    }
+
+    const { error } = await supabase.from('hotspots').insert(insertData)
+    if (!error) {
+      setShowAddVisualHotspotModal(false)
+      const { data } = await supabase.from('hotspots').select('*').in('from_room_id', rooms.map(r => r.id))
+      setHotspots(data || [])
+    } else {
+      alert(error.message)
+    }
+  }
 
   useEffect(() => {
     const loadProject = async () => {
@@ -51,7 +112,9 @@ export default function TourPreview() {
   useEffect(() => {
     if (currentRoom) {
       let floor = 'Other'
-      if (currentRoom.room_name.includes('Ground Floor')) {
+      if (currentRoom.room_name.includes(' - ')) {
+        floor = currentRoom.room_name.split(' - ')[0]
+      } else if (currentRoom.room_name.includes('Ground Floor')) {
         floor = 'Ground Floor'
       } else if (currentRoom.room_name.includes('First Floor')) {
         floor = 'First Floor'
@@ -79,12 +142,12 @@ export default function TourPreview() {
     }
 
     return () => {
-      if (pannellumRef.current) {
-        pannellumRef.current.destroy()
-        pannellumRef.current = null
-      }
+    if (pannellumRef.current) {
+      pannellumRef.current.destroy()
+      pannellumRef.current = null
     }
-  }, [currentRoom])
+  }
+}, [currentRoom, hotspots, isVisualHotspotMode])
 
   const initViewer = () => {
     if (pannellumRef.current) {
@@ -95,28 +158,51 @@ export default function TourPreview() {
     const roomHotspots = hotspots
       .filter(h => h.from_room_id === currentRoom.id)
       .map(h => {
-        const targetRoom = rooms.find(r => r.id === h.to_room_id)
-        return {
-          pitch: h.pitch,
-          yaw: h.yaw,
-          type: 'custom',
-          text: h.label || `Go to ${targetRoom?.room_name}`,
-          cssClass: 'tour-hotspot',
-          clickHandlerFunc: () => setCurrentRoom(targetRoom)
+        if (h.type === 'info') {
+          return {
+            pitch: h.pitch,
+            yaw: h.yaw,
+            type: 'custom',
+            text: h.label || 'Info',
+            cssClass: 'tour-info-hotspot',
+            clickHandlerFunc: () => setInfoPopupContent(h.info_text)
+          }
+        } else {
+          const targetRoom = rooms.find(r => r.id === h.to_room_id)
+          return {
+            pitch: h.pitch,
+            yaw: h.yaw,
+            type: 'custom',
+            text: h.label || `Go to ${targetRoom?.room_name}`,
+            cssClass: 'tour-hotspot',
+            clickHandlerFunc: () => {
+              if (targetRoom) setCurrentRoom(targetRoom)
+            }
+          }
         }
       })
 
+    const autoRotateSpeed = project?.auto_rotate ? (project?.auto_rotate_speed ?? -2.0) : 0
+    const showCompass = project?.show_compass ?? false
+
     if (viewerRef.current && window.pannellum) {
-      pannellumRef.current = window.pannellum.viewer(viewerRef.current, {
+      const viewer = window.pannellum.viewer(viewerRef.current, {
         type: 'equirectangular',
         panorama: currentRoom.photo_url,
         autoLoad: true,
-        autoRotate: -2,
-        compass: false,
+        autoRotate: isVisualHotspotMode ? 0 : autoRotateSpeed,
+        compass: showCompass,
         showFullscreenCtrl: true,
         showZoomCtrl: false,
         hotSpots: roomHotspots,
       })
+      pannellumRef.current = viewer
+
+      const canvasEl = viewerRef.current.querySelector('.pnlm-render-container')
+      if (canvasEl) {
+        canvasEl.addEventListener('mousedown', handleViewerMouseDown)
+        canvasEl.addEventListener('mouseup', handleViewerMouseUp)
+      }
     }
   }
 
@@ -141,6 +227,26 @@ export default function TourPreview() {
             <ArrowLeft size={18} />
           </button>
         </div>
+
+        {/* Visual Hotspot Editor Toggle */}
+        <div className="p-3 border-b border-gray-800/80 bg-gray-950/20">
+          <button
+            onClick={() => setIsVisualHotspotMode(!isVisualHotspotMode)}
+            className={`w-full py-2 px-3 rounded-xl text-xs font-semibold border transition-all cursor-pointer text-center flex items-center justify-center gap-1.5 ${
+              isVisualHotspotMode
+                ? 'bg-orange-500 border-orange-500 text-white shadow-lg shadow-orange-500/20 animate-pulse'
+                : 'bg-gray-800 border-gray-750 text-gray-300 hover:bg-gray-750 hover:text-white'
+            }`}
+          >
+            <span>{isVisualHotspotMode ? 'Stop Visual Editing' : 'Add Hotspots Visually'}</span>
+          </button>
+          {isVisualHotspotMode && (
+            <p className="text-[10px] text-orange-400 mt-2 text-center leading-normal">
+              Click anywhere on the 360° screen to place a new hotspot at that point.
+            </p>
+          )}
+        </div>
+
         <div className="flex-1 overflow-y-auto p-2 space-y-3">
           <div className="text-gray-500 text-[10px] uppercase tracking-wider font-semibold px-2 mb-1">Select Floor</div>
           {(() => {
@@ -150,12 +256,10 @@ export default function TourPreview() {
               let floor = 'Other'
               let displayName = room.room_name
               
-              if (room.room_name.includes('Ground Floor - ')) {
-                floor = 'Ground Floor'
-                displayName = room.room_name.replace('Ground Floor - ', '')
-              } else if (room.room_name.includes('First Floor - ')) {
-                floor = 'First Floor'
-                displayName = room.room_name.replace('First Floor - ', '')
+              if (room.room_name.includes(' - ')) {
+                const parts = room.room_name.split(' - ')
+                floor = parts[0]
+                displayName = parts[1]
               } else if (room.room_name.includes('Ground Floor')) {
                 floor = 'Ground Floor'
               } else if (room.room_name.includes('First Floor')) {
@@ -164,12 +268,22 @@ export default function TourPreview() {
               
               if (!groupedRooms[floor]) {
                 groupedRooms[floor] = []
+                if (expandedFloors[floor] === undefined) {
+                  expandedFloors[floor] = true
+                }
               }
               groupedRooms[floor].push({ ...room, displayName })
             })
 
-            const floorOrder = ['Ground Floor', 'First Floor', 'Other']
-            const sortedFloors = floorOrder.filter(f => groupedRooms[f] && groupedRooms[f].length > 0)
+            const floorOrder = ['Ground Floor', 'First Floor', 'Third Floor', 'Other']
+            const uniqueFloors = Object.keys(groupedRooms)
+            const sortedFloors = uniqueFloors.sort((a, b) => {
+              let idxA = floorOrder.indexOf(a)
+              let idxB = floorOrder.indexOf(b)
+              if (idxA === -1) idxA = 999
+              if (idxB === -1) idxB = 999
+              return idxA - idxB
+            }).filter(f => groupedRooms[f].length > 0)
 
             return sortedFloors.map(floor => (
               <div key={floor} className="space-y-1">
@@ -215,8 +329,175 @@ export default function TourPreview() {
           </div>
         )}
         {currentRoom && (
-          <div className="absolute bottom-4 left-4 bg-black/75 text-white px-4 py-2 rounded-xl text-xs font-semibold backdrop-blur-sm border border-gray-800 select-none pointer-events-none">
+          <div className="absolute bottom-4 left-4 bg-black/75 text-white px-4 py-2 rounded-xl text-xs font-semibold backdrop-blur-sm border border-gray-800 select-none pointer-events-none z-20">
             {currentRoom.room_name}
+          </div>
+        )}
+
+        {/* Floor Plan Minimap Overlay */}
+        {project?.floorplan_url && (
+          <div className="absolute top-4 right-4 z-25">
+            <button
+              onClick={() => setShowMinimap(!showMinimap)}
+              className="bg-gray-900/90 hover:bg-orange-500 text-white p-3 rounded-xl border border-gray-800 backdrop-blur-md shadow-lg transition-all cursor-pointer flex items-center justify-center gap-1.5 font-semibold text-xs"
+            >
+              <MapPin size={16} />
+              <span>{showMinimap ? 'Hide Map' : 'Show Map'}</span>
+            </button>
+            
+            {showMinimap && (
+              <div className="absolute right-0 top-14 w-80 bg-gray-950/90 border border-gray-800 rounded-2xl p-4 shadow-2xl backdrop-blur-md animate-in fade-in zoom-in duration-200">
+                <div className="flex items-center justify-between mb-3 border-b border-gray-850 pb-2">
+                  <span className="text-xs font-bold text-white uppercase tracking-wider font-display">Floor Plan Minimap</span>
+                  <span className="text-[10px] text-orange-400 font-semibold bg-orange-950/40 px-2 py-0.5 rounded-full border border-orange-900/30">
+                    {rooms.find(r => r.id === currentRoom?.id)?.room_name.split(' - ').pop() || currentRoom?.room_name}
+                  </span>
+                </div>
+                <div className="relative border border-gray-850 rounded-xl bg-black/60 p-2 overflow-hidden flex items-center justify-center">
+                  <div className="relative inline-block">
+                    <img
+                      src={project.floorplan_url}
+                      alt="Minimap"
+                      className="max-h-48 w-auto object-contain rounded-lg select-none"
+                    />
+                    {rooms.filter(r => r.floorplan_x !== null && r.floorplan_y !== null).map(r => {
+                      const isCurrent = r.id === currentRoom?.id
+                      return (
+                        <button
+                          key={r.id}
+                          style={{ left: `${r.floorplan_x}%`, top: `${r.floorplan_y}%` }}
+                          onClick={() => {
+                            if (r.photo_url) {
+                              setCurrentRoom(r)
+                            } else {
+                              alert(`No photo uploaded for ${r.room_name}`)
+                            }
+                          }}
+                          className={`absolute -translate-x-1/2 -translate-y-1/2 w-4 h-4 rounded-full border-2 border-white flex items-center justify-center cursor-pointer transition-all shadow-md ${
+                            isCurrent ? 'bg-orange-500 scale-125 z-10 animate-pulse shadow-orange-500/50' : 'bg-blue-500 hover:bg-blue-600'
+                          }`}
+                          title={r.room_name}
+                        >
+                          <span className="sr-only">{r.room_name}</span>
+                        </button>
+                      )
+                    })}
+                  </div>
+                </div>
+              </div>
+            )}
+          </div>
+        )}
+
+        {/* Info Popup Overlay */}
+        {infoPopupContent && (
+          <div className="fixed inset-0 bg-black/50 z-50 flex items-center justify-center p-4 backdrop-blur-sm">
+            <div className="bg-gray-950/90 border border-gray-800 rounded-2xl w-full max-w-md p-6 relative backdrop-blur-md shadow-2xl animate-in fade-in zoom-in-95 duration-200">
+              <button
+                onClick={() => setInfoPopupContent(null)}
+                className="absolute top-4 right-4 text-gray-400 hover:text-white cursor-pointer bg-gray-900 p-1.5 rounded-lg border border-gray-850 transition-colors"
+              >
+                <X size={16} />
+              </button>
+              <div className="flex items-start gap-3 mb-4">
+                <div className="bg-blue-500/10 p-2.5 rounded-xl border border-blue-900/30 text-blue-400">
+                  <Info size={20} />
+                </div>
+                <div>
+                  <h4 className="text-white font-bold text-base font-display">Feature Details</h4>
+                  <p className="text-xs text-gray-400 mt-0.5">{currentRoom?.room_name}</p>
+                </div>
+              </div>
+              <p className="text-gray-300 text-sm leading-relaxed whitespace-pre-line bg-gray-900/40 p-4 border border-gray-850 rounded-xl">
+                {infoPopupContent}
+              </p>
+            </div>
+          </div>
+        )}
+
+        {/* Visual Hotspot Creator Modal */}
+        {showAddVisualHotspotModal && (
+          <div className="fixed inset-0 bg-black/75 z-50 flex items-center justify-center p-4 backdrop-blur-sm">
+            <div className="bg-gray-900 border border-gray-800 rounded-2xl w-full max-w-md p-6 relative shadow-2xl animate-in fade-in zoom-in duration-150">
+              <button
+                onClick={() => setShowAddVisualHotspotModal(false)}
+                className="absolute top-4 right-4 text-gray-400 hover:text-white cursor-pointer"
+              >
+                <X size={20} />
+              </button>
+              <h2 className="text-lg font-bold text-white mb-4 font-display flex items-center gap-2">
+                <Plus size={18} className="text-orange-500" /> Create Hotspot Visually
+              </h2>
+              
+              <div className="space-y-4">
+                <div className="grid grid-cols-2 gap-2 bg-gray-850 p-2 border border-gray-800 rounded-xl text-center text-xs text-gray-400 font-mono">
+                  <div>pitch: {newHotspotCoords.pitch}°</div>
+                  <div>yaw: {newHotspotCoords.yaw}°</div>
+                </div>
+
+                <div>
+                  <label className="text-gray-400 text-xs mb-1.5 block font-medium">Type</label>
+                  <div className="grid grid-cols-2 gap-2">
+                    <button
+                      onClick={() => setVisualHotspotForm({ ...visualHotspotForm, type: 'scene' })}
+                      className={`py-1.5 px-3 rounded-lg text-xs font-semibold border transition-all cursor-pointer text-center ${visualHotspotForm.type === 'scene' ? 'bg-orange-500 border-orange-500 text-white' : 'bg-gray-800 border-gray-750 text-gray-400'}`}
+                    >
+                      Link to Room
+                    </button>
+                    <button
+                      onClick={() => setVisualHotspotForm({ ...visualHotspotForm, type: 'info' })}
+                      className={`py-1.5 px-3 rounded-lg text-xs font-semibold border transition-all cursor-pointer text-center ${visualHotspotForm.type === 'info' ? 'bg-orange-500 border-orange-500 text-white' : 'bg-gray-800 border-gray-750 text-gray-400'}`}
+                    >
+                      Info Popup
+                    </button>
+                  </div>
+                </div>
+
+                {visualHotspotForm.type === 'scene' ? (
+                  <div>
+                    <label className="text-gray-400 text-xs mb-1 block font-medium">Target Room (Destination)</label>
+                    <select
+                      value={visualHotspotForm.toRoom}
+                      onChange={e => setVisualHotspotForm({ ...visualHotspotForm, toRoom: e.target.value })}
+                      className="w-full bg-gray-850 border border-gray-700 rounded-lg px-3 py-2 text-white text-xs focus:outline-none focus:border-orange-500"
+                    >
+                      {rooms.filter(r => r.id !== currentRoom.id).map(r => (
+                        <option key={r.id} value={r.id}>{r.room_name}</option>
+                      ))}
+                    </select>
+                  </div>
+                ) : (
+                  <div>
+                    <label className="text-gray-400 text-xs mb-1 block font-medium">Info Text (Popup content)</label>
+                    <textarea
+                      placeholder="e.g. Premium Italian marble flooring."
+                      value={visualHotspotForm.infoText}
+                      onChange={e => setVisualHotspotForm({ ...visualHotspotForm, infoText: e.target.value })}
+                      className="w-full bg-gray-850 border border-gray-700 rounded-lg px-3 py-2 text-white placeholder-gray-600 text-xs focus:outline-none focus:border-orange-500 h-20 resize-none"
+                    />
+                  </div>
+                )}
+
+                <div>
+                  <label className="text-gray-400 text-xs mb-1 block font-medium">Label / Tooltip text</label>
+                  <input
+                    type="text"
+                    placeholder={visualHotspotForm.type === 'scene' ? 'e.g. Go to Kitchen' : 'e.g. View Flooring Details'}
+                    value={visualHotspotForm.label}
+                    onChange={e => setVisualHotspotForm({ ...visualHotspotForm, label: e.target.value })}
+                    className="w-full bg-gray-850 border border-gray-700 rounded-lg px-3 py-2 text-white placeholder-gray-600 text-xs focus:outline-none focus:border-orange-500"
+                  />
+                </div>
+
+                <button
+                  onClick={handleSaveVisualHotspot}
+                  disabled={visualHotspotForm.type === 'scene' ? !visualHotspotForm.toRoom : !visualHotspotForm.infoText.trim()}
+                  className="w-full bg-orange-500 hover:bg-orange-600 disabled:opacity-50 text-white font-semibold rounded-xl py-2.5 mt-2 transition-colors cursor-pointer text-xs"
+                >
+                  Create Hotspot
+                </button>
+              </div>
+            </div>
           </div>
         )}
       </div>

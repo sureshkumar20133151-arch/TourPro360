@@ -349,6 +349,215 @@ style.textContent = `
     background: #ea580c;
     border-color: transparent;
   }
+
+  .tourpro-info-hotspot {
+    width: 40px;
+    height: 40px;
+    background: rgba(59, 130, 246, 0.85);
+    border: 3px solid white;
+    border-radius: 50%;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    box-shadow: 0 0 10px rgba(0, 0, 0, 0.5);
+    transition: transform 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+  }
+  .tourpro-info-hotspot:hover {
+    transform: scale(1.15) rotate(15deg);
+  }
+  .tourpro-info-hotspot::after {
+    content: 'ℹ';
+    color: white;
+    font-size: 16px;
+    font-weight: bold;
+  }
+  
+  .tourpro-info-overlay {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background: rgba(2, 6, 23, 0.5);
+    backdrop-filter: blur(4px);
+    z-index: 1100;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 16px;
+    box-sizing: border-box;
+    font-family: system-ui, -apple-system, sans-serif;
+  }
+  .tourpro-info-card {
+    background: rgba(15, 23, 42, 0.95);
+    border: 1px solid rgba(255, 255, 255, 0.08);
+    border-radius: 16px;
+    padding: 20px;
+    max-width: 360px;
+    width: 100%;
+    box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.3);
+    position: relative;
+    color: #e2e8f0;
+    backdrop-filter: blur(8px);
+  }
+  .tourpro-info-card-header {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    margin-bottom: 12px;
+  }
+  .tourpro-info-card-icon {
+    background: rgba(59, 130, 246, 0.1);
+    color: #60a5fa;
+    width: 32px;
+    height: 32px;
+    border-radius: 8px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-weight: bold;
+    font-size: 16px;
+    border: 1px solid rgba(59, 130, 246, 0.2);
+  }
+  .tourpro-info-card-title {
+    font-weight: bold;
+    font-size: 14px;
+    color: white;
+  }
+  .tourpro-info-card-body {
+    font-size: 12.5px;
+    line-height: 1.6;
+    background: rgba(2, 6, 23, 0.3);
+    padding: 12px;
+    border-radius: 10px;
+    border: 1px solid rgba(255,255,255,0.03);
+    color: #cbd5e1;
+  }
+  .tourpro-info-card-close {
+    position: absolute;
+    top: 12px;
+    right: 12px;
+    background: transparent;
+    border: none;
+    color: rgba(255, 255, 255, 0.4);
+    font-size: 20px;
+    cursor: pointer;
+    padding: 4px;
+    line-height: 1;
+    transition: color 0.2s;
+  }
+  .tourpro-info-card-close:hover {
+    color: white;
+  }
+
+  .tourpro-map-btn {
+    position: absolute;
+    top: 16px;
+    right: 16px;
+    background: rgba(15, 23, 42, 0.8);
+    color: white;
+    border: 1px solid rgba(255,255,255,0.08);
+    width: 38px;
+    height: 38px;
+    border-radius: 50%;
+    cursor: pointer;
+    z-index: 1001;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 16px;
+    transition: all 0.2s;
+    backdrop-filter: blur(8px);
+  }
+  .tourpro-map-btn:hover {
+    background: rgba(234, 88, 12, 0.95);
+  }
+  .tourpro-map-overlay {
+    position: absolute;
+    top: 64px;
+    right: 16px;
+    width: 280px;
+    background: rgba(15, 23, 42, 0.95);
+    border: 1px solid rgba(255,255,255,0.08);
+    border-radius: 16px;
+    padding: 12px;
+    box-sizing: border-box;
+    z-index: 1001;
+    backdrop-filter: blur(8px);
+    box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.3);
+    display: none;
+    flex-direction: column;
+    font-family: system-ui, -apple-system, sans-serif;
+  }
+  .tourpro-map-overlay.open {
+    display: flex;
+  }
+  .tourpro-map-header {
+    color: white;
+    font-size: 11px;
+    font-weight: bold;
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+    margin-bottom: 8px;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+  }
+  .tourpro-map-container {
+    position: relative;
+    background: rgba(2, 6, 23, 0.4);
+    border: 1px solid rgba(255,255,255,0.05);
+    border-radius: 10px;
+    overflow: hidden;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 8px;
+  }
+  .tourpro-map-img {
+    max-width: 100%;
+    max-height: 160px;
+    object-fit: contain;
+    border-radius: 6px;
+    user-select: none;
+  }
+  .tourpro-map-dot {
+    position: absolute;
+    width: 14px;
+    height: 14px;
+    border: 2px solid white;
+    border-radius: 50%;
+    cursor: pointer;
+    box-shadow: 0 2px 4px rgba(0,0,0,0.3);
+    transform: translate(-50%, -50%);
+    transition: all 0.2s;
+    padding: 0;
+    box-sizing: border-box;
+  }
+  .tourpro-map-dot.current {
+    background: #ea580c;
+    transform: translate(-50%, -50%) scale(1.2);
+    animation: tourpro-pulse 1.5s infinite;
+  }
+  .tourpro-map-dot.other {
+    background: #3b82f6;
+  }
+  .tourpro-map-dot.other:hover {
+    background: #2563eb;
+    transform: translate(-50%, -50%) scale(1.1);
+  }
+  @keyframes tourpro-pulse {
+    0% {
+      box-shadow: 0 0 0 0 rgba(234, 88, 12, 0.7);
+    }
+    70% {
+      box-shadow: 0 0 0 6px rgba(234, 88, 12, 0);
+    }
+    100% {
+      box-shadow: 0 0 0 0 rgba(234, 88, 12, 0);
+    }
+  }
 `
 document.head.appendChild(style)
 
@@ -393,9 +602,11 @@ async function loadSingleTour(container, token) {
 
   const entryRoom = rooms.find(r => r.id === project.entry_room_id) || rooms[0]
   let currentViewer = null
+  let updateMinimap = null
   const expandedFloors = {
     'Ground Floor': true,
     'First Floor': true,
+    'Third Floor': true,
     'Other': true
   }
 
@@ -408,6 +619,124 @@ async function loadSingleTour(container, token) {
   label.className = 'tourpro-room-label'
   label.textContent = entryRoom.room_name
   container.appendChild(label)
+
+  // Show Info Popup function
+  function showInfoPopup(text) {
+    const infoOverlay = document.createElement('div')
+    infoOverlay.className = 'tourpro-info-overlay'
+    
+    const infoCard = document.createElement('div')
+    infoCard.className = 'tourpro-info-card'
+    
+    const closeBtn = document.createElement('button')
+    closeBtn.className = 'tourpro-info-card-close'
+    closeBtn.innerHTML = '&times;'
+    closeBtn.addEventListener('click', () => infoOverlay.remove())
+    
+    const header = document.createElement('div')
+    header.className = 'tourpro-info-card-header'
+    
+    const icon = document.createElement('div')
+    icon.className = 'tourpro-info-card-icon'
+    icon.textContent = 'i'
+    
+    const title = document.createElement('div')
+    title.className = 'tourpro-info-card-title'
+    title.textContent = 'Feature Details'
+    
+    header.appendChild(icon)
+    header.appendChild(title)
+    
+    const body = document.createElement('div')
+    body.className = 'tourpro-info-card-body'
+    body.textContent = text
+    
+    infoCard.appendChild(closeBtn)
+    infoCard.appendChild(header)
+    infoCard.appendChild(body)
+    infoOverlay.appendChild(infoCard)
+    
+    infoOverlay.addEventListener('click', (e) => {
+      if (e.target === infoOverlay) {
+        infoOverlay.remove()
+      }
+    })
+    
+    container.appendChild(infoOverlay)
+  }
+
+  // Floor Plan Minimap setup
+  if (project.floorplan_url) {
+    const mapBtn = document.createElement('button')
+    mapBtn.className = 'tourpro-map-btn'
+    mapBtn.innerHTML = '🗺️'
+    mapBtn.title = 'Show Floor Plan'
+    container.appendChild(mapBtn)
+    
+    const mapOverlay = document.createElement('div')
+    mapOverlay.className = 'tourpro-map-overlay'
+    
+    const mapHeader = document.createElement('div')
+    mapHeader.className = 'tourpro-map-header'
+    
+    const mapTitle = document.createElement('span')
+    mapTitle.textContent = 'Floor Plan'
+    mapHeader.appendChild(mapTitle)
+    
+    const mapActiveRoom = document.createElement('span')
+    mapActiveRoom.style.color = '#ea580c'
+    mapActiveRoom.style.fontSize = '10px'
+    mapHeader.appendChild(mapActiveRoom)
+    
+    mapOverlay.appendChild(mapHeader)
+    
+    const mapContainer = document.createElement('div')
+    mapContainer.className = 'tourpro-map-container'
+    
+    const mapImgWrapper = document.createElement('div')
+    mapImgWrapper.style.position = 'relative'
+    mapImgWrapper.style.display = 'inline-block'
+    
+    const mapImg = document.createElement('img')
+    mapImg.className = 'tourpro-map-img'
+    mapImg.src = project.floorplan_url
+    mapImgWrapper.appendChild(mapImg)
+    mapContainer.appendChild(mapImgWrapper)
+    mapOverlay.appendChild(mapContainer)
+    container.appendChild(mapOverlay)
+    
+    mapBtn.addEventListener('click', () => {
+      mapOverlay.classList.toggle('open')
+    })
+    
+    updateMinimap = function(activeRoom) {
+      mapActiveRoom.textContent = activeRoom.room_name.split(' - ').pop()
+      
+      const oldDots = mapImgWrapper.querySelectorAll('.tourpro-map-dot')
+      oldDots.forEach(d => d.remove())
+      
+      rooms.forEach(r => {
+        if (r.floorplan_x !== null && r.floorplan_y !== null) {
+          const dot = document.createElement('button')
+          dot.className = `tourpro-map-dot ${r.id === activeRoom.id ? 'current' : 'other'}`
+          dot.style.left = `${r.floorplan_x}%`
+          dot.style.top = `${r.floorplan_y}%`
+          dot.title = r.room_name
+          
+          dot.addEventListener('click', () => {
+            if (r.id !== activeRoom.id) {
+              if (r.photo_url) {
+                loadRoom(r)
+              } else {
+                alert(`No photo uploaded for ${r.room_name}`)
+              }
+            }
+          })
+          mapImgWrapper.appendChild(dot)
+        }
+      })
+    }
+  }
 
   // Add Watermark
   const watermark = document.createElement('div')
@@ -453,12 +782,10 @@ async function loadSingleTour(container, token) {
       let floor = 'Other'
       let displayName = room.room_name
       
-      if (room.room_name.includes('Ground Floor - ')) {
-        floor = 'Ground Floor'
-        displayName = room.room_name.replace('Ground Floor - ', '')
-      } else if (room.room_name.includes('First Floor - ')) {
-        floor = 'First Floor'
-        displayName = room.room_name.replace('First Floor - ', '')
+      if (room.room_name.includes(' - ')) {
+        const parts = room.room_name.split(' - ')
+        floor = parts[0]
+        displayName = parts[1]
       } else if (room.room_name.includes('Ground Floor')) {
         floor = 'Ground Floor'
       } else if (room.room_name.includes('First Floor')) {
@@ -467,12 +794,22 @@ async function loadSingleTour(container, token) {
       
       if (!groupedRooms[floor]) {
         groupedRooms[floor] = []
+        if (expandedFloors[floor] === undefined) {
+          expandedFloors[floor] = true
+        }
       }
       groupedRooms[floor].push({ ...room, displayName })
     })
 
-    const floorOrder = ['Ground Floor', 'First Floor', 'Other']
-    const sortedFloors = floorOrder.filter(f => groupedRooms[f] && groupedRooms[f].length > 0)
+    const floorOrder = ['Ground Floor', 'First Floor', 'Third Floor', 'Other']
+    const uniqueFloors = Object.keys(groupedRooms)
+    const sortedFloors = uniqueFloors.sort((a, b) => {
+      let idxA = floorOrder.indexOf(a)
+      let idxB = floorOrder.indexOf(b)
+      if (idxA === -1) idxA = 999
+      if (idxB === -1) idxB = 999
+      return idxA - idxB
+    }).filter(f => groupedRooms[f].length > 0)
 
     sortedFloors.forEach(floor => {
       // Create Floor Header toggle button
@@ -540,7 +877,9 @@ async function loadSingleTour(container, token) {
 
   function loadRoom(room) {
     let floor = 'Other'
-    if (room.room_name.includes('Ground Floor')) {
+    if (room.room_name.includes(' - ')) {
+      floor = room.room_name.split(' - ')[0]
+    } else if (room.room_name.includes('Ground Floor')) {
       floor = 'Ground Floor'
     } else if (room.room_name.includes('First Floor')) {
       floor = 'First Floor'
@@ -554,23 +893,39 @@ async function loadSingleTour(container, token) {
     const roomHotspots = (hotspots || [])
       .filter(h => h.from_room_id === room.id)
       .map(h => {
-        const targetRoom = rooms.find(r => r.id === h.to_room_id)
-        return {
-          pitch: h.pitch,
-          yaw: h.yaw,
-          type: 'custom',
-          text: h.label || `Go to ${targetRoom?.room_name}`,
-          cssClass: 'tourpro-hotspot',
-          clickHandlerFunc: () => loadRoom(targetRoom)
+        if (h.type === 'info') {
+          return {
+            pitch: h.pitch,
+            yaw: h.yaw,
+            type: 'custom',
+            text: h.label || 'Info',
+            cssClass: 'tourpro-info-hotspot',
+            clickHandlerFunc: () => showInfoPopup(h.info_text)
+          }
+        } else {
+          const targetRoom = rooms.find(r => r.id === h.to_room_id)
+          return {
+            pitch: h.pitch,
+            yaw: h.yaw,
+            type: 'custom',
+            text: h.label || `Go to ${targetRoom?.room_name}`,
+            cssClass: 'tourpro-hotspot',
+            clickHandlerFunc: () => {
+              if (targetRoom) loadRoom(targetRoom)
+            }
+          }
         }
       })
+
+    const autoRotateSpeed = project.auto_rotate ? (project.auto_rotate_speed ?? -2.0) : 0
+    const showCompass = project.show_compass ?? false
 
     currentViewer = window.pannellum.viewer(container, {
       type: 'equirectangular',
       panorama: room.photo_url,
       autoLoad: true,
-      autoRotate: -2,
-      compass: false,
+      autoRotate: autoRotateSpeed,
+      compass: showCompass,
       showFullscreenCtrl: true,
       showZoomCtrl: false,
       hotSpots: roomHotspots,
@@ -579,6 +934,10 @@ async function loadSingleTour(container, token) {
 
     label.textContent = room.room_name
     updateRoomListUI(room)
+    
+    if (project.floorplan_url && typeof updateMinimap === 'function') {
+      updateMinimap(room)
+    }
   }
 
   loadRoom(entryRoom)
