@@ -210,10 +210,45 @@ export default function TourPreview() {
     return <div className="h-screen bg-black flex items-center justify-center text-gray-400">Loading virtual tour preview...</div>
   }
 
+  // Group rooms by floor
+  const groupedRooms = {}
+  rooms.forEach(room => {
+    let floor = 'Other'
+    let displayName = room.room_name
+    
+    if (room.room_name.includes(' - ')) {
+      const parts = room.room_name.split(' - ')
+      floor = parts[0]
+      displayName = parts[1]
+    } else if (room.room_name.includes('Ground Floor')) {
+      floor = 'Ground Floor'
+    } else if (room.room_name.includes('First Floor')) {
+      floor = 'First Floor'
+    }
+    
+    if (!groupedRooms[floor]) {
+      groupedRooms[floor] = []
+      if (expandedFloors[floor] === undefined) {
+        expandedFloors[floor] = true
+      }
+    }
+    groupedRooms[floor].push({ ...room, displayName })
+  })
+
+  const floorOrder = ['Ground Floor', 'First Floor', 'Third Floor', 'Other']
+  const uniqueFloors = Object.keys(groupedRooms)
+  const sortedFloors = uniqueFloors.sort((a, b) => {
+    let idxA = floorOrder.indexOf(a)
+    let idxB = floorOrder.indexOf(b)
+    if (idxA === -1) idxA = 999
+    if (idxB === -1) idxB = 999
+    return idxA - idxB
+  }).filter(f => groupedRooms[f].length > 0)
+
   return (
     <div className="h-screen bg-black flex flex-col md:flex-row overflow-hidden">
       {/* Sidebar Navigation */}
-      <div className="w-full md:w-64 bg-gray-900 border-b md:border-b-0 md:border-r border-gray-800 flex flex-col h-48 md:h-full z-10">
+      <div className="w-full md:w-64 bg-gray-900 border-b md:border-b-0 md:border-r border-gray-800 flex flex-col h-auto md:h-full z-10">
         <div className="p-4 border-b border-gray-800 flex items-center justify-between">
           <div>
             <div className="text-white font-bold text-sm truncate max-w-[150px] md:max-w-none">{project?.building_name}</div>
@@ -247,78 +282,65 @@ export default function TourPreview() {
           )}
         </div>
 
-        <div className="flex-1 overflow-y-auto p-2 space-y-3">
+        {/* Mobile Room Selector Dropdown */}
+        <div className="block md:hidden px-3 pb-3 pt-3">
+          <div className="text-gray-500 text-[10px] uppercase tracking-wider font-semibold mb-1.5">Select Room</div>
+          <select
+            value={currentRoom?.id || ''}
+            onChange={(e) => {
+              const room = rooms.find(r => r.id === e.target.value);
+              if (room) setCurrentRoom(room);
+            }}
+            className="w-full bg-gray-800 border border-gray-750 rounded-xl px-3 py-2.5 text-white text-xs focus:outline-none focus:border-orange-500 cursor-pointer font-semibold"
+          >
+            {sortedFloors.map(floor => (
+              <optgroup key={floor} label={floor} className="bg-gray-900 text-gray-400 font-sans font-bold">
+                {groupedRooms[floor].map(room => (
+                  <option key={room.id} value={room.id} className="bg-gray-850 text-white font-medium">
+                    {room.displayName}
+                  </option>
+                ))}
+              </optgroup>
+            ))}
+          </select>
+        </div>
+
+        {/* Desktop Room List Accordion */}
+        <div className="hidden md:flex flex-col flex-1 overflow-y-auto p-2 space-y-3">
           <div className="text-gray-500 text-[10px] uppercase tracking-wider font-semibold px-2 mb-1">Select Floor</div>
-          {(() => {
-            // Group rooms by floor
-            const groupedRooms = {}
-            rooms.forEach(room => {
-              let floor = 'Other'
-              let displayName = room.room_name
-              
-              if (room.room_name.includes(' - ')) {
-                const parts = room.room_name.split(' - ')
-                floor = parts[0]
-                displayName = parts[1]
-              } else if (room.room_name.includes('Ground Floor')) {
-                floor = 'Ground Floor'
-              } else if (room.room_name.includes('First Floor')) {
-                floor = 'First Floor'
-              }
-              
-              if (!groupedRooms[floor]) {
-                groupedRooms[floor] = []
-                if (expandedFloors[floor] === undefined) {
-                  expandedFloors[floor] = true
-                }
-              }
-              groupedRooms[floor].push({ ...room, displayName })
-            })
-
-            const floorOrder = ['Ground Floor', 'First Floor', 'Third Floor', 'Other']
-            const uniqueFloors = Object.keys(groupedRooms)
-            const sortedFloors = uniqueFloors.sort((a, b) => {
-              let idxA = floorOrder.indexOf(a)
-              let idxB = floorOrder.indexOf(b)
-              if (idxA === -1) idxA = 999
-              if (idxB === -1) idxB = 999
-              return idxA - idxB
-            }).filter(f => groupedRooms[f].length > 0)
-
-            return sortedFloors.map(floor => (
-              <div key={floor} className="space-y-1">
-                <button
-                  onClick={() => setExpandedFloors(prev => ({ ...prev, [floor]: !prev[floor] }))}
-                  className="w-full flex items-center justify-between px-2 py-1.5 bg-gray-800/40 hover:bg-gray-800/80 rounded-lg text-gray-300 hover:text-white text-xs font-semibold transition-colors cursor-pointer select-none"
-                >
-                  <span>{floor}</span>
-                  <span className="text-[9px] text-gray-500">{expandedFloors[floor] ? '▼' : '▶'}</span>
-                </button>
-                {expandedFloors[floor] && (
-                  <div className="pl-1 pt-1 space-y-1 border-l border-gray-800 ml-2">
-                    {groupedRooms[floor].map(room => (
-                      <button
-                        key={room.id}
-                        onClick={() => setCurrentRoom(room)}
-                        className={`w-full text-left px-3 py-2 rounded-lg text-xs font-medium transition-colors cursor-pointer block truncate ${
-                          currentRoom?.id === room.id
-                            ? 'bg-orange-500 text-white font-semibold'
-                            : 'text-gray-400 hover:bg-gray-800/60 hover:text-white'
-                        }`}
-                      >
-                        {room.displayName}
-                      </button>
-                    ))}
-                  </div>
-                )}
-              </div>
-            ))
-          })()}
+          {sortedFloors.map(floor => (
+            <div key={floor} className="space-y-1">
+              <button
+                onClick={() => setExpandedFloors(prev => ({ ...prev, [floor]: !prev[floor] }))}
+                className="w-full flex items-center justify-between px-2 py-1.5 bg-gray-800/40 hover:bg-gray-800/80 rounded-lg text-gray-300 hover:text-white text-xs font-semibold transition-colors cursor-pointer select-none"
+              >
+                <span>{floor}</span>
+                <span className="text-[9px] text-gray-500">{expandedFloors[floor] ? '▼' : '▶'}</span>
+              </button>
+              {expandedFloors[floor] && (
+                <div className="pl-1 pt-1 space-y-1 border-l border-gray-800 ml-2">
+                  {groupedRooms[floor].map(room => (
+                    <button
+                      key={room.id}
+                      onClick={() => setCurrentRoom(room)}
+                      className={`w-full text-left px-3 py-2 rounded-lg text-xs font-medium transition-colors cursor-pointer block truncate ${
+                        currentRoom?.id === room.id
+                          ? 'bg-orange-500 text-white font-semibold'
+                          : 'text-gray-400 hover:bg-gray-800/60 hover:text-white'
+                      }`}
+                    >
+                      {room.displayName}
+                    </button>
+                  ))}
+                </div>
+              )}
+            </div>
+          ))}
         </div>
       </div>
 
       {/* 360 Viewer Canvas */}
-      <div className="flex-1 relative h-full">
+      <div className="flex-1 relative min-h-0 md:h-full">
         {currentRoom?.photo_url ? (
           <div ref={viewerRef} className="w-full h-full" />
         ) : (
