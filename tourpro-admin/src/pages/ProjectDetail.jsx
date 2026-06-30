@@ -79,6 +79,18 @@ export default function ProjectDetail() {
     }
   }
 
+  const handleClearWalkthrough = () => {
+    if (confirm('Are you sure you want to remove the 3D walkthrough configuration? This will clear all walkthrough files and coordinates.')) {
+      setMetadataForm(prev => ({
+        ...prev,
+        walkthrough_url: '',
+        walkthrough_rotation: '',
+        walkthrough_cam_position: '',
+        walkthrough_cam_lookat: ''
+      }))
+    }
+  }
+
   const fetchData = async () => {
     setLoading(true)
     // Fetch project
@@ -518,6 +530,15 @@ export default function ProjectDetail() {
                     </label>
                   </div>
                 </div>
+                {metadataForm.walkthrough_url && (
+                  <button
+                    type="button"
+                    onClick={handleClearWalkthrough}
+                    className="mt-2 text-red-400 hover:text-red-300 text-xs font-semibold flex items-center gap-1.5 transition-colors cursor-pointer select-none"
+                  >
+                    <Trash2 size={14} /> Remove 3D Walkthrough
+                  </button>
+                )}
               </div>
               <div>
                 <label className="text-gray-400 text-xs mb-1 block font-medium">Scene Rotation Correction (e.g. 0,0,168)</label>
@@ -528,6 +549,9 @@ export default function ProjectDetail() {
                   onChange={e => setMetadataForm({ ...metadataForm, walkthrough_rotation: e.target.value })}
                   className="w-full bg-gray-800 border border-gray-750 rounded-xl px-4 py-2.5 text-white focus:outline-none focus:border-orange-500 text-sm"
                 />
+                <p className="text-[10px] text-gray-500 mt-1 leading-relaxed">
+                  Scene orientation in Euler degrees (X,Y,Z). Corrects scan tilt to make the ground floor level.
+                </p>
               </div>
               <div>
                 <label className="text-gray-400 text-xs mb-1 block font-medium">Camera Position (e.g. -1.209,0.5,4.0)</label>
@@ -538,6 +562,9 @@ export default function ProjectDetail() {
                   onChange={e => setMetadataForm({ ...metadataForm, walkthrough_cam_position: e.target.value })}
                   className="w-full bg-gray-800 border border-gray-750 rounded-xl px-4 py-2.5 text-white focus:outline-none focus:border-orange-500 text-sm"
                 />
+                <p className="text-[10px] text-gray-500 mt-1 leading-relaxed">
+                  Starting camera position offset in meters (X,Y,Z). Adjust height (Y) or distance (Z) to start inside room center.
+                </p>
               </div>
               <div>
                 <label className="text-gray-400 text-xs mb-1 block font-medium">Camera Target / Look-At (e.g. -1.209,-1.0,-0.156)</label>
@@ -548,6 +575,9 @@ export default function ProjectDetail() {
                   onChange={e => setMetadataForm({ ...metadataForm, walkthrough_cam_lookat: e.target.value })}
                   className="w-full bg-gray-800 border border-gray-750 rounded-xl px-4 py-2.5 text-white focus:outline-none focus:border-orange-500 text-sm"
                 />
+                <p className="text-[10px] text-gray-500 mt-1 leading-relaxed">
+                  The target point in space the camera looks at. Set a lower height (Y) to focus the camera downwards.
+                </p>
               </div>
             </div>
 
