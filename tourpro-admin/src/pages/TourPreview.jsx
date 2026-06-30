@@ -26,6 +26,7 @@ export default function TourPreview() {
   const [visualHotspotForm, setVisualHotspotForm] = useState({ type: 'scene', label: '', toRoom: '', infoText: '' })
   const [infoPopupContent, setInfoPopupContent] = useState(null)
   const [showMinimap, setShowMinimap] = useState(false)
+  const [previewMode, setPreviewMode] = useState('tour') // 'tour' or 'walkthrough'
 
   const isVisualHotspotModeRef = useRef(isVisualHotspotMode)
   useEffect(() => {
@@ -124,7 +125,7 @@ export default function TourPreview() {
   }, [currentRoom])
 
   useEffect(() => {
-    if (!currentRoom || !viewerRef.current) return
+    if (previewMode === 'walkthrough' || !currentRoom || !viewerRef.current) return
 
     // Load Pannellum dynamically if not loaded
     if (!window.pannellum) {
@@ -213,6 +214,9 @@ export default function TourPreview() {
   // Group rooms by floor
   const groupedRooms = {}
   rooms.forEach(room => {
+    if (room.room_name.includes('(Corner)') || room.room_name.includes('(End)')) {
+      return
+    }
     let floor = 'Other'
     let displayName = room.room_name
     
@@ -263,85 +267,136 @@ export default function TourPreview() {
           </button>
         </div>
 
-        {/* Visual Hotspot Editor Toggle */}
-        <div className="p-3 border-b border-gray-800/80 bg-gray-950/20">
-          <button
-            onClick={() => setIsVisualHotspotMode(!isVisualHotspotMode)}
-            className={`w-full py-2 px-3 rounded-xl text-xs font-semibold border transition-all cursor-pointer text-center flex items-center justify-center gap-1.5 ${
-              isVisualHotspotMode
-                ? 'bg-orange-500 border-orange-500 text-white shadow-lg shadow-orange-500/20 animate-pulse'
-                : 'bg-gray-800 border-gray-750 text-gray-300 hover:bg-gray-750 hover:text-white'
-            }`}
-          >
-            <span>{isVisualHotspotMode ? 'Stop Visual Editing' : 'Add Hotspots Visually'}</span>
-          </button>
-          {isVisualHotspotMode && (
-            <p className="text-[10px] text-orange-400 mt-2 text-center leading-normal">
-              Click anywhere on the 360° screen to place a new hotspot at that point.
-            </p>
-          )}
-        </div>
+        {/* Visual Hotspot Editor Toggle - Hidden in Walkthrough */}
+        {previewMode === 'tour' ? (
+          <div className="p-3 border-b border-gray-800/80 bg-gray-950/20">
+            <button
+              onClick={() => setIsVisualHotspotMode(!isVisualHotspotMode)}
+              className={`w-full py-2 px-3 rounded-xl text-xs font-semibold border transition-all cursor-pointer text-center flex items-center justify-center gap-1.5 ${
+                isVisualHotspotMode
+                  ? 'bg-orange-500 border-orange-500 text-white shadow-lg shadow-orange-500/20 animate-pulse'
+                  : 'bg-gray-800 border-gray-750 text-gray-300 hover:bg-gray-750 hover:text-white'
+              }`}
+            >
+              <span>{isVisualHotspotMode ? 'Stop Visual Editing' : 'Add Hotspots Visually'}</span>
+            </button>
+            {isVisualHotspotMode && (
+              <p className="text-[10px] text-orange-400 mt-2 text-center leading-normal">
+                Click anywhere on the 360° screen to place a new hotspot at that point.
+              </p>
+            )}
+          </div>
+        ) : (
+          <div className="p-4 border-b border-gray-800 bg-gray-950/30 text-center">
+            <span className="text-[11px] text-orange-400 font-medium">3D Walkthrough Mode Active</span>
+            <p className="text-[10px] text-gray-500 mt-1">Navigate using keyboard / mouse controls inside the viewer canvas.</p>
+          </div>
+        )}
 
         {/* Mobile Room Selector Dropdown */}
-        <div className="block md:hidden px-3 pb-3 pt-3">
-          <div className="text-gray-500 text-[10px] uppercase tracking-wider font-semibold mb-1.5">Select Room</div>
-          <select
-            value={currentRoom?.id || ''}
-            onChange={(e) => {
-              const room = rooms.find(r => r.id === e.target.value);
-              if (room) setCurrentRoom(room);
-            }}
-            className="w-full bg-gray-800 border border-gray-750 rounded-xl px-3 py-2.5 text-white text-xs focus:outline-none focus:border-orange-500 cursor-pointer font-semibold"
-          >
-            {sortedFloors.map(floor => (
-              <optgroup key={floor} label={floor} className="bg-gray-900 text-gray-400 font-sans font-bold">
-                {groupedRooms[floor].map(room => (
-                  <option key={room.id} value={room.id} className="bg-gray-850 text-white font-medium">
-                    {room.displayName}
-                  </option>
-                ))}
-              </optgroup>
-            ))}
-          </select>
-        </div>
+        {previewMode === 'tour' && (
+          <div className="block md:hidden px-3 pb-3 pt-3">
+            <div className="text-gray-500 text-[10px] uppercase tracking-wider font-semibold mb-1.5">Select Room</div>
+            <select
+              value={currentRoom?.id || ''}
+              onChange={(e) => {
+                const room = rooms.find(r => r.id === e.target.value);
+                if (room) setCurrentRoom(room);
+              }}
+              className="w-full bg-gray-800 border border-gray-750 rounded-xl px-3 py-2.5 text-white text-xs focus:outline-none focus:border-orange-500 cursor-pointer font-semibold"
+            >
+              {sortedFloors.map(floor => (
+                <optgroup key={floor} label={floor} className="bg-gray-900 text-gray-400 font-sans font-bold">
+                  {groupedRooms[floor].map(room => (
+                    <option key={room.id} value={room.id} className="bg-gray-850 text-white font-medium">
+                      {room.displayName}
+                    </option>
+                  ))}
+                </optgroup>
+              ))}
+            </select>
+          </div>
+        )}
 
         {/* Desktop Room List Accordion */}
-        <div className="hidden md:flex flex-col flex-1 overflow-y-auto p-2 space-y-3">
-          <div className="text-gray-500 text-[10px] uppercase tracking-wider font-semibold px-2 mb-1">Select Floor</div>
-          {sortedFloors.map(floor => (
-            <div key={floor} className="space-y-1">
-              <button
-                onClick={() => setExpandedFloors(prev => ({ ...prev, [floor]: !prev[floor] }))}
-                className="w-full flex items-center justify-between px-2 py-1.5 bg-gray-800/40 hover:bg-gray-800/80 rounded-lg text-gray-300 hover:text-white text-xs font-semibold transition-colors cursor-pointer select-none"
-              >
-                <span>{floor}</span>
-                <span className="text-[9px] text-gray-500">{expandedFloors[floor] ? '▼' : '▶'}</span>
-              </button>
-              {expandedFloors[floor] && (
-                <div className="pl-1 pt-1 space-y-1 border-l border-gray-800 ml-2">
-                  {groupedRooms[floor].map(room => (
-                    <button
-                      key={room.id}
-                      onClick={() => setCurrentRoom(room)}
-                      className={`w-full text-left px-3 py-2 rounded-lg text-xs font-medium transition-colors cursor-pointer block truncate ${
-                        currentRoom?.id === room.id
-                          ? 'bg-orange-500 text-white font-semibold'
-                          : 'text-gray-400 hover:bg-gray-800/60 hover:text-white'
-                      }`}
-                    >
-                      {room.displayName}
-                    </button>
-                  ))}
-                </div>
-              )}
-            </div>
-          ))}
-        </div>
+        {previewMode === 'tour' ? (
+          <div className="hidden md:flex flex-col flex-1 overflow-y-auto p-2 space-y-3">
+            <div className="text-gray-500 text-[10px] uppercase tracking-wider font-semibold px-2 mb-1">Select Floor</div>
+            {sortedFloors.map(floor => (
+              <div key={floor} className="space-y-1">
+                <button
+                  onClick={() => setExpandedFloors(prev => ({ ...prev, [floor]: !prev[floor] }))}
+                  className="w-full flex items-center justify-between px-2 py-1.5 bg-gray-800/40 hover:bg-gray-800/80 rounded-lg text-gray-300 hover:text-white text-xs font-semibold transition-colors cursor-pointer select-none"
+                >
+                  <span>{floor}</span>
+                  <span className="text-[9px] text-gray-500">{expandedFloors[floor] ? '▼' : '▶'}</span>
+                </button>
+                {expandedFloors[floor] && (
+                  <div className="pl-1 pt-1 space-y-1 border-l border-gray-800 ml-2">
+                    {groupedRooms[floor].map(room => (
+                      <button
+                        key={room.id}
+                        onClick={() => setCurrentRoom(room)}
+                        className={`w-full text-left px-3 py-2 rounded-lg text-xs font-medium transition-colors cursor-pointer block truncate ${
+                          currentRoom?.id === room.id
+                            ? 'bg-orange-500 text-white font-semibold'
+                            : 'text-gray-400 hover:bg-gray-800/60 hover:text-white'
+                        }`}
+                      >
+                        {room.displayName}
+                      </button>
+                    ))}
+                  </div>
+                )}
+              </div>
+            ))}
+          </div>
+        ) : (
+          <div className="hidden md:flex flex-col flex-1 items-center justify-center p-6 text-center text-gray-500">
+            <div className="text-xs uppercase tracking-widest font-bold text-orange-400/80 mb-2">3D Walkthrough View</div>
+            <p className="text-[11px] leading-relaxed text-gray-400 max-w-[200px]">
+              Use standard Orbit, Pan, and Zoom controls to explore the digital twin space.
+            </p>
+          </div>
+        )}
       </div>
 
       {/* 360 Viewer Canvas */}
-      <div className="flex-1 relative min-h-0 md:h-full">
-        {currentRoom?.photo_url ? (
+      <div className="flex-1 relative min-h-0 md:h-full bg-black">
+        {/* Toggle Mode Tab Bar overlay */}
+        {project?.walkthrough_url && (
+          <div className="absolute top-4 left-4 z-30 bg-gray-900/90 border border-gray-800 rounded-xl p-1 shadow-lg backdrop-blur-md flex gap-1 select-none">
+            <button
+              onClick={() => setPreviewMode('tour')}
+              className={`px-3 py-1.5 rounded-lg text-xs font-semibold transition-all cursor-pointer ${
+                previewMode === 'tour'
+                  ? 'bg-orange-500 text-white'
+                  : 'text-gray-400 hover:text-white'
+              }`}
+            >
+              360° Virtual Tour
+            </button>
+            <button
+              onClick={() => setPreviewMode('walkthrough')}
+              className={`px-3 py-1.5 rounded-lg text-xs font-semibold transition-all cursor-pointer ${
+                previewMode === 'walkthrough'
+                  ? 'bg-orange-500 text-white'
+                  : 'text-gray-400 hover:text-white'
+              }`}
+            >
+              3D Walkthrough
+            </button>
+          </div>
+        )}
+
+        {previewMode === 'walkthrough' ? (
+          <iframe
+            src={`/playcanvas-viewer.html?content=${encodeURIComponent(project.walkthrough_url)}&noui&v=1${project.walkthrough_rotation ? `&sceneRotation=${encodeURIComponent(project.walkthrough_rotation)}` : ''}${project.walkthrough_cam_position ? `&cameraPosition=${encodeURIComponent(project.walkthrough_cam_position)}` : ''}${project.walkthrough_cam_lookat ? `&cameraLookAt=${encodeURIComponent(project.walkthrough_cam_lookat)}` : ''}`}
+            className="w-full h-full border-0 relative z-10"
+            title="3D Walkthrough"
+            allow="xr-spatial-tracking; clipboard-write; gamepad"
+          />
+        ) : currentRoom?.photo_url ? (
           <div ref={viewerRef} className="w-full h-full" />
         ) : (
           <div className="w-full h-full flex flex-col items-center justify-center text-gray-500 bg-gray-950 p-6">
@@ -350,14 +405,14 @@ export default function TourPreview() {
             <p className="text-xs text-gray-650 mt-1">Please add an image file in the Projects editor.</p>
           </div>
         )}
-        {currentRoom && (
+        {previewMode === 'tour' && currentRoom && (
           <div className="absolute bottom-4 left-4 bg-black/75 text-white px-4 py-2 rounded-xl text-xs font-semibold backdrop-blur-sm border border-gray-800 select-none pointer-events-none z-20">
             {currentRoom.room_name}
           </div>
         )}
 
-        {/* Floor Plan Minimap Overlay */}
-        {project?.floorplan_url && (
+        {/* Floor Plan Minimap Overlay - Hidden in Walkthrough */}
+        {previewMode === 'tour' && project?.floorplan_url && (
           <div className="absolute top-4 right-4 z-25">
             <button
               onClick={() => setShowMinimap(!showMinimap)}
@@ -382,7 +437,7 @@ export default function TourPreview() {
                       alt="Minimap"
                       className="max-h-48 w-auto object-contain rounded-lg select-none"
                     />
-                    {rooms.filter(r => r.floorplan_x !== null && r.floorplan_y !== null).map(r => {
+                    {rooms.filter(r => r.floorplan_x !== null && r.floorplan_y !== null && !r.room_name.includes('(Corner)') && !r.room_name.includes('(End)')).map(r => {
                       const isCurrent = r.id === currentRoom?.id
                       return (
                         <button

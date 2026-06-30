@@ -29,7 +29,11 @@ export default function ProjectDetail() {
     building_type: 'Residential',
     auto_rotate: true,
     auto_rotate_speed: -2.0,
-    show_compass: false
+    show_compass: false,
+    walkthrough_url: '',
+    walkthrough_rotation: '',
+    walkthrough_cam_position: '',
+    walkthrough_cam_lookat: ''
   })
 
   // Add Room state
@@ -69,7 +73,11 @@ export default function ProjectDetail() {
       building_type: proj.building_type,
       auto_rotate: proj.auto_rotate ?? true,
       auto_rotate_speed: proj.auto_rotate_speed ?? -2.0,
-      show_compass: proj.show_compass ?? false
+      show_compass: proj.show_compass ?? false,
+      walkthrough_url: proj.walkthrough_url || '',
+      walkthrough_rotation: proj.walkthrough_rotation || '',
+      walkthrough_cam_position: proj.walkthrough_cam_position || '',
+      walkthrough_cam_lookat: proj.walkthrough_cam_lookat || ''
     })
 
     // Fetch rooms
@@ -455,6 +463,52 @@ export default function ProjectDetail() {
                 />
                 <label htmlFor="show_compass" className="text-gray-300 text-sm cursor-pointer select-none">Show Compass in 360° Viewer</label>
               </div>
+
+              {/* Walkthrough Settings */}
+              <div className="md:col-span-2 border-t border-gray-800 pt-4 mt-2">
+                <h3 className="text-sm font-bold text-orange-400 mb-1 uppercase tracking-wider font-display">3D Walkthrough (Gaussian Splatting)</h3>
+                <p className="text-xs text-gray-500">Configure settings for PlayCanvas Gaussian Splats walkthrough renderer.</p>
+              </div>
+              <div className="md:col-span-2">
+                <label className="text-gray-400 text-xs mb-1 block font-medium">Walkthrough .splat / .ply URL</label>
+                <input
+                  type="text"
+                  placeholder="e.g. /assets/room.splat"
+                  value={metadataForm.walkthrough_url}
+                  onChange={e => setMetadataForm({ ...metadataForm, walkthrough_url: e.target.value })}
+                  className="w-full bg-gray-800 border border-gray-750 rounded-xl px-4 py-2.5 text-white focus:outline-none focus:border-orange-500 text-sm"
+                />
+              </div>
+              <div>
+                <label className="text-gray-400 text-xs mb-1 block font-medium">Scene Rotation Correction (e.g. 0,0,168)</label>
+                <input
+                  type="text"
+                  placeholder="e.g. 0,0,168"
+                  value={metadataForm.walkthrough_rotation}
+                  onChange={e => setMetadataForm({ ...metadataForm, walkthrough_rotation: e.target.value })}
+                  className="w-full bg-gray-800 border border-gray-750 rounded-xl px-4 py-2.5 text-white focus:outline-none focus:border-orange-500 text-sm"
+                />
+              </div>
+              <div>
+                <label className="text-gray-400 text-xs mb-1 block font-medium">Camera Position (e.g. -1.209,0.5,4.0)</label>
+                <input
+                  type="text"
+                  placeholder="e.g. -1.209,0.5,4.0"
+                  value={metadataForm.walkthrough_cam_position}
+                  onChange={e => setMetadataForm({ ...metadataForm, walkthrough_cam_position: e.target.value })}
+                  className="w-full bg-gray-800 border border-gray-750 rounded-xl px-4 py-2.5 text-white focus:outline-none focus:border-orange-500 text-sm"
+                />
+              </div>
+              <div>
+                <label className="text-gray-400 text-xs mb-1 block font-medium">Camera Target / Look-At (e.g. -1.209,-1.0,-0.156)</label>
+                <input
+                  type="text"
+                  placeholder="e.g. -1.209,-1.0,-0.156"
+                  value={metadataForm.walkthrough_cam_lookat}
+                  onChange={e => setMetadataForm({ ...metadataForm, walkthrough_cam_lookat: e.target.value })}
+                  className="w-full bg-gray-800 border border-gray-750 rounded-xl px-4 py-2.5 text-white focus:outline-none focus:border-orange-500 text-sm"
+                />
+              </div>
             </div>
 
             <div className="flex justify-end gap-3 mt-4">
@@ -473,8 +527,8 @@ export default function ProjectDetail() {
             </div>
           </div>
         ) : (
-          <div className="flex flex-col md:flex-row md:items-center justify-between gap-6">
-            <div>
+          <div className="flex flex-col md:flex-row md:items-start justify-between gap-6">
+            <div className="flex-1">
               <div className="flex items-center gap-3 flex-wrap">
                 <h1 className="text-2xl font-bold text-white font-display">{project.building_name}</h1>
                 <span className={`text-xs px-2.5 py-0.5 rounded-full font-medium ${project.is_live ? 'bg-green-900/40 text-green-400 border border-green-800/50' : 'bg-gray-800 text-gray-400 border border-gray-750'}`}>
@@ -485,6 +539,44 @@ export default function ProjectDetail() {
                 </span>
               </div>
               <p className="text-gray-400 text-sm mt-1">Client: <span className="text-gray-300 font-medium">{project.client_name}</span> | City: <span className="text-gray-300 font-medium">{project.city || 'N/A'}</span></p>
+
+              {/* Show walkthrough configuration if configured */}
+              {project.walkthrough_url ? (
+                <div className="mt-4 flex flex-col md:flex-row md:items-center justify-between gap-4 bg-gray-950/45 border border-gray-850 p-4 rounded-xl max-w-xl text-left text-xs">
+                  <div className="flex flex-col gap-1 flex-1">
+                    <span className="text-[10px] uppercase tracking-widest text-orange-400 font-bold font-display flex items-center gap-1.5">
+                      <span className="w-1.5 h-1.5 rounded-full bg-orange-500 animate-pulse" />
+                      3D Gaussian Splat Walkthrough Active
+                    </span>
+                    <div className="text-gray-300 font-mono text-[10px] truncate max-w-[320px] md:max-w-none mt-1">URL: {project.walkthrough_url}</div>
+                    <div className="text-gray-400 flex flex-wrap gap-x-4 mt-1 font-mono text-[10px]">
+                      <span>Rot: {project.walkthrough_rotation || '0,0,0'}</span>
+                      <span>Pos: {project.walkthrough_cam_position || 'N/A'}</span>
+                      <span>Look: {project.walkthrough_cam_lookat || 'N/A'}</span>
+                    </div>
+                  </div>
+                  <a
+                    href="https://playcanvas.com/supersplat/editor/"
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="shrink-0 bg-orange-500/10 hover:bg-orange-500/20 border border-orange-500/30 text-orange-300 hover:text-white px-3 py-2 rounded-lg text-xs font-semibold flex items-center gap-1.5 transition-colors cursor-pointer select-none text-center"
+                  >
+                    Launch SuperSplat Editor
+                  </a>
+                </div>
+              ) : (
+                <div className="mt-4 flex flex-col md:flex-row md:items-center justify-between gap-4 bg-gray-950/15 border border-dashed border-gray-800 p-4 rounded-xl max-w-xl text-left text-xs text-gray-500">
+                  <span>No 3D Gaussian Splat walkthrough is configured for this project.</span>
+                  <a
+                    href="https://playcanvas.com/supersplat/editor/"
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="bg-gray-800 hover:bg-gray-750 text-gray-400 hover:text-white px-3 py-1.5 rounded-lg border border-gray-750 font-semibold transition-colors cursor-pointer select-none"
+                  >
+                    Open SuperSplat
+                  </a>
+                </div>
+              )}
             </div>
             <div className="flex items-center gap-3 flex-wrap">
               <button
