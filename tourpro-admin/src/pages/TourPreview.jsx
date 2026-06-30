@@ -103,6 +103,14 @@ export default function TourPreview() {
       setRooms(currentRooms)
       setHotspots(hotspotData)
 
+      const has360 = currentRooms.some(r => r.photo_url)
+      const hasWalk = !!proj?.walkthrough_url
+      if (hasWalk && !has360) {
+        setPreviewMode('walkthrough')
+      } else {
+        setPreviewMode('tour')
+      }
+
       const entry = currentRooms.find(r => r.id === proj.entry_room_id) || currentRooms[0]
       setCurrentRoom(entry)
       setLoading(false)
@@ -364,7 +372,7 @@ export default function TourPreview() {
       {/* 360 Viewer Canvas */}
       <div className="flex-1 relative min-h-0 md:h-full bg-black">
         {/* Toggle Mode Tab Bar overlay */}
-        {project?.walkthrough_url && (
+        {project?.walkthrough_url && rooms.some(r => r.photo_url) && (
           <div className="absolute top-4 left-4 z-30 bg-gray-900/90 border border-gray-800 rounded-xl p-1 shadow-lg backdrop-blur-md flex gap-1 select-none">
             <button
               onClick={() => setPreviewMode('tour')}
