@@ -30,6 +30,8 @@ export default function ProjectDetail() {
     auto_rotate: true,
     auto_rotate_speed: -2.0,
     show_compass: false,
+    show_three_sixty: true,
+    show_walkthrough: true,
     walkthrough_url: '',
     walkthrough_rotation: '',
     walkthrough_cam_position: '',
@@ -109,6 +111,8 @@ export default function ProjectDetail() {
       auto_rotate: proj.auto_rotate ?? true,
       auto_rotate_speed: proj.auto_rotate_speed ?? -2.0,
       show_compass: proj.show_compass ?? false,
+      show_three_sixty: proj.show_three_sixty ?? true,
+      show_walkthrough: proj.show_walkthrough ?? true,
       walkthrough_url: proj.walkthrough_url || '',
       walkthrough_rotation: proj.walkthrough_rotation || '',
       walkthrough_cam_position: proj.walkthrough_cam_position || '',
@@ -499,6 +503,28 @@ export default function ProjectDetail() {
                 <label htmlFor="show_compass" className="text-gray-300 text-sm cursor-pointer select-none">Show Compass in 360° Viewer</label>
               </div>
 
+              <div className="flex items-center gap-2 pt-2 md:col-span-2">
+                <input
+                  type="checkbox"
+                  id="show_three_sixty"
+                  checked={metadataForm.show_three_sixty}
+                  onChange={e => setMetadataForm({ ...metadataForm, show_three_sixty: e.target.checked })}
+                  className="accent-orange-500 h-4 w-4"
+                />
+                <label htmlFor="show_three_sixty" className="text-gray-300 text-sm cursor-pointer select-none">Show 360° Virtual Tour on Client Website</label>
+              </div>
+
+              <div className="flex items-center gap-2 pt-2 md:col-span-2">
+                <input
+                  type="checkbox"
+                  id="show_walkthrough"
+                  checked={metadataForm.show_walkthrough}
+                  onChange={e => setMetadataForm({ ...metadataForm, show_walkthrough: e.target.checked })}
+                  className="accent-orange-500 h-4 w-4"
+                />
+                <label htmlFor="show_walkthrough" className="text-gray-300 text-sm cursor-pointer select-none">Show 3D Walkthrough on Client Website</label>
+              </div>
+
               {/* Walkthrough Settings */}
               <div className="md:col-span-2 border-t border-gray-800 pt-4 mt-2">
                 <h3 className="text-sm font-bold text-orange-400 mb-1 uppercase tracking-wider font-display">3D Walkthrough (Gaussian Splatting)</h3>
@@ -606,6 +632,12 @@ export default function ProjectDetail() {
                 </span>
                 <span className="text-xs px-2.5 py-0.5 rounded-full bg-orange-950/40 text-orange-400 border border-orange-900/30">
                   {project.building_type}
+                </span>
+                <span className={`text-[10px] px-2 py-0.5 rounded-full font-semibold border ${project.show_three_sixty ? 'bg-indigo-950/40 text-indigo-400 border-indigo-900/40' : 'bg-red-950/20 text-red-400 border-red-950/40'}`}>
+                  360° Tour: {project.show_three_sixty ? 'ON' : 'OFF'}
+                </span>
+                <span className={`text-[10px] px-2 py-0.5 rounded-full font-semibold border ${project.show_walkthrough ? 'bg-amber-950/40 text-amber-400 border-amber-900/40' : 'bg-red-950/20 text-red-400 border-red-950/40'}`}>
+                  3D Walkthrough: {project.show_walkthrough ? 'ON' : 'OFF'}
                 </span>
               </div>
               <p className="text-gray-400 text-sm mt-1">Client: <span className="text-gray-300 font-medium">{project.client_name}</span> | City: <span className="text-gray-300 font-medium">{project.city || 'N/A'}</span></p>
