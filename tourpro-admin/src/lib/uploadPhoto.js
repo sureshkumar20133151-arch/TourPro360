@@ -61,3 +61,19 @@ export async function uploadFloorplan(projectId, file) {
   return data.publicUrl
 }
 
+export async function uploadWalkthrough(projectId, file) {
+  const fileExt = file.name.split('.').pop().toLowerCase()
+  const filePath = `tours/${projectId}/walkthrough.${fileExt}`
+  const { error } = await supabase.storage
+    .from('tours')
+    .upload(filePath, file, {
+      contentType: 'application/octet-stream',
+      upsert: true
+    })
+
+  if (error) throw error
+
+  const { data } = supabase.storage.from('tours').getPublicUrl(filePath)
+  return data.publicUrl
+}
+

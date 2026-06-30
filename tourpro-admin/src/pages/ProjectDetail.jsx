@@ -1,7 +1,7 @@
 import { useEffect, useState, useRef } from 'react'
 import { useParams, useNavigate } from 'react-router-dom'
 import { supabase } from '../lib/supabase'
-import { uploadRoomPhoto, uploadFloorplan } from '../lib/uploadPhoto'
+import { uploadRoomPhoto, uploadFloorplan, uploadWalkthrough } from '../lib/uploadPhoto'
 import { Building2, Eye, Code, Trash2, ArrowLeft, Plus, Image, Star, Edit, Save, X, MapPin, Compass, HelpCircle, Info } from 'lucide-react'
 
 const BUILDING_TYPES = ['Residential', 'Commercial', 'Villa', 'Apartment', 'Plot']
@@ -55,6 +55,29 @@ export default function ProjectDetail() {
   // Floor Plan Config state
   const [uploadingFloorplanState, setUploadingFloorplanState] = useState(false)
   const [selectedRoomForMapping, setSelectedRoomForMapping] = useState('')
+
+  // Walkthrough upload state
+  const [uploadingWalkthrough, setUploadingWalkthrough] = useState(false)
+
+  const handleUploadWalkthrough = async (e) => {
+    const file = e.target.files?.[0]
+    if (!file) return
+    const fileExt = file.name.split('.').pop().toLowerCase()
+    if (fileExt !== 'ply' && fileExt !== 'splat') {
+      alert('Only .ply and .splat files are allowed for 3D walkthrough.')
+      return
+    }
+    setUploadingWalkthrough(true)
+    try {
+      const url = await uploadWalkthrough(id, file)
+      setMetadataForm(prev => ({ ...prev, walkthrough_url: url }))
+      alert('3D walkthrough file uploaded successfully! Please click Save Changes to finalize.')
+    } catch (err) {
+      alert('Error uploading walkthrough file: ' + err.message)
+    } finally {
+      setUploadingWalkthrough(false)
+    }
+  }
 
   const fetchData = async () => {
     setLoading(true)
@@ -470,14 +493,31 @@ export default function ProjectDetail() {
                 <p className="text-xs text-gray-500">Configure settings for PlayCanvas Gaussian Splats walkthrough renderer.</p>
               </div>
               <div className="md:col-span-2">
-                <label className="text-gray-400 text-xs mb-1 block font-medium">Walkthrough .splat / .ply URL</label>
-                <input
-                  type="text"
-                  placeholder="e.g. /assets/room.splat"
-                  value={metadataForm.walkthrough_url}
-                  onChange={e => setMetadataForm({ ...metadataForm, walkthrough_url: e.target.value })}
-                  className="w-full bg-gray-800 border border-gray-750 rounded-xl px-4 py-2.5 text-white focus:outline-none focus:border-orange-500 text-sm"
-                />
+                <label className="text-gray-400 text-xs mb-1 block font-medium">Walkthrough .splat / .ply URL or Upload File</label>
+                <div className="flex flex-col sm:flex-row gap-3">
+                  <input
+                    type="text"
+                    placeholder="e.g. /assets/room.splat"
+                    value={metadataForm.walkthrough_url}
+                    onChange={e => setMetadataForm({ ...metadataForm, walkthrough_url: e.target.value })}
+                    className="flex-1 bg-gray-800 border border-gray-750 rounded-xl px-4 py-2.5 text-white focus:outline-none focus:border-orange-500 text-sm"
+                  />
+                  <div className="relative shrink-0">
+                    <input
+                      type="file"
+                      id="walkthrough_file"
+                      accept=".ply,.splat"
+                      onChange={handleUploadWalkthrough}
+                      className="hidden"
+                    />
+                    <label
+                      htmlFor="walkthrough_file"
+                      className={`inline-flex items-center gap-1.5 justify-center bg-gray-800 hover:bg-gray-750 text-gray-300 hover:text-white px-4 py-2.5 rounded-xl border border-gray-750 text-sm font-semibold transition-colors cursor-pointer select-none text-center h-full min-h-[42px] ${uploadingWalkthrough ? 'opacity-50 pointer-events-none' : ''}`}
+                    >
+                      {uploadingWalkthrough ? 'Uploading...' : 'Upload File (.splat/.ply)'}
+                    </label>
+                  </div>
+                </div>
               </div>
               <div>
                 <label className="text-gray-400 text-xs mb-1 block font-medium">Scene Rotation Correction (e.g. 0,0,168)</label>
