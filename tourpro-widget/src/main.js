@@ -1,8 +1,8 @@
 import 'pannellum/build/pannellum.js'
 import { createClient } from '@supabase/supabase-js'
 
-const SUPABASE_URL = import.meta.env.VITE_SUPABASE_URL || ''
-const SUPABASE_ANON_KEY = import.meta.env.VITE_SUPABASE_ANON_KEY || ''
+const SUPABASE_URL = import.meta.env.VITE_SUPABASE_URL || 'https://jmmlncqtukxvwicueahl.supabase.co'
+const SUPABASE_ANON_KEY = import.meta.env.VITE_SUPABASE_ANON_KEY || 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImptbWxuY3F0dWt4dndpY3VlYWhsIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODM2OTQyMjEsImV4cCI6MjA5OTI3MDIyMX0.7Y4ve4x4uN5hEnik75Uuq-0_aBWvyOrh622pvzW5Vx8'
 
 // Inject Pannellum CSS dynamically
 if (!document.querySelector('link[href*="pannellum.css"]')) {
@@ -17,26 +17,58 @@ const style = document.createElement('style')
 style.textContent = `
   /* Single Viewer Styles */
   .tourpro-hotspot {
-    width: 40px;
-    height: 40px;
-    background: rgba(234, 88, 12, 0.85);
-    border: 3px solid white;
+    width: 32px;
+    height: 32px;
+    background: rgba(255, 255, 255, 0.25);
+    border: 3px solid rgba(255, 255, 255, 0.9);
     border-radius: 50%;
     cursor: pointer;
     display: flex;
     align-items: center;
     justify-content: center;
-    box-shadow: 0 0 10px rgba(0, 0, 0, 0.5);
-    transition: transform 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+    box-shadow: 0 0 15px rgba(255, 255, 255, 0.5);
+    transition: all 0.3s ease;
+    position: relative;
+    transform: rotateX(60deg);
   }
-  .tourpro-hotspot:hover {
-    transform: scale(1.15) rotate(15deg);
+  .tourpro-hotspot::before {
+    content: '';
+    position: absolute;
+    width: 10px;
+    height: 10px;
+    background: white;
+    border-radius: 50%;
+    box-shadow: 0 0 8px rgba(0, 0, 0, 0.3);
+    transition: all 0.3s ease;
   }
   .tourpro-hotspot::after {
-    content: '➔';
-    color: white;
-    font-size: 16px;
-    font-weight: bold;
+    content: '';
+    position: absolute;
+    width: 100%;
+    height: 100%;
+    border: 2px solid rgba(255, 255, 255, 0.7);
+    border-radius: 50%;
+    animation: tourpro-hotspot-pulse 1.8s infinite ease-out;
+    pointer-events: none;
+  }
+  @keyframes tourpro-hotspot-pulse {
+    0% {
+      transform: scale(1);
+      opacity: 1;
+    }
+    100% {
+      transform: scale(2.2);
+      opacity: 0;
+    }
+  }
+  .tourpro-hotspot:hover {
+    background: rgba(0, 122, 255, 0.4);
+    border-color: rgba(255, 255, 255, 1);
+    box-shadow: 0 0 25px rgba(0, 122, 255, 0.8);
+    transform: rotateX(60deg) scale(1.15);
+  }
+  .tourpro-hotspot:hover::before {
+    background: #007aff;
   }
   .tourpro-room-label {
     position: absolute;
@@ -716,6 +748,9 @@ async function loadSingleTour(container, token) {
       oldDots.forEach(d => d.remove())
       
       rooms.forEach(r => {
+        if (r.room_name.includes('(Corner)') || r.room_name.includes('(End)')) {
+          return
+        }
         if (r.floorplan_x !== null && r.floorplan_y !== null) {
           const dot = document.createElement('button')
           dot.className = `tourpro-map-dot ${r.id === activeRoom.id ? 'current' : 'other'}`
@@ -779,6 +814,9 @@ async function loadSingleTour(container, token) {
     // Group rooms by floor
     const groupedRooms = {}
     rooms.forEach(room => {
+      if (room.room_name.includes('(Corner)') || room.room_name.includes('(End)')) {
+        return
+      }
       let floor = 'Other'
       let displayName = room.room_name
       
